@@ -1,0 +1,132 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:uts_cargo/features/home/presentation/pages/home_page.dart';
+import 'package:uts_cargo/features/order/presentation/pages/order_page.dart';
+import 'package:uts_cargo/features/profile/presentation/pages/profile_page.dart';
+import 'package:uts_cargo/features/support/presentation/pages/support_chat_page.dart';
+
+import '../../core/constants/constants.dart';
+import '../../core/svg/app_svg.dart';
+import '../../core/theme/app_colors.dart';
+
+class DashboardPage extends StatefulWidget {
+  const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  int _currentIndex = 0;
+  final List<Widget> _screens = [
+    const HomePage(),
+    const OrderPage(),
+    const SupportChatPage(),
+    const ProfilePage()
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.screenColor,
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.whiteColor,
+        selectedItemColor: AppColors.mainColor,
+        unselectedItemColor: AppColors.grayColor,
+        selectedLabelStyle: TextStyle(
+          color: AppColors.mainColor,
+          fontFamily: Constants.exo,
+          fontWeight: FontWeight.bold,
+        ),
+        unselectedLabelStyle: TextStyle(
+          color: AppColors.grayColor,
+          fontFamily: Constants.exo,
+          fontWeight: FontWeight.bold,
+        ),
+        showUnselectedLabels: true,
+        showSelectedLabels: true,
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: SvgPicture.asset(
+              AppSvg.icHome,
+              colorFilter: ColorFilter.mode(
+                AppColors.grayColor,
+                BlendMode.srcIn,
+              ),
+            ),
+            activeIcon: SvgPicture.asset(
+              AppSvg.icActiveHome,
+              colorFilter: ColorFilter.mode(
+                AppColors.mainColor,
+                BlendMode.srcIn,
+              ),
+            ),
+            label: "Asosiy",
+          ),
+          BottomNavigationBarItem(
+            icon: SvgPicture.asset(
+              AppSvg.icBox,
+              colorFilter: ColorFilter.mode(
+                AppColors.grayColor,
+                BlendMode.srcIn,
+              ),
+            ),
+            activeIcon: SvgPicture.asset(
+              AppSvg.icActiveBox,
+              colorFilter: ColorFilter.mode(
+                AppColors.mainColor,
+                BlendMode.srcIn,
+              ),
+            ),
+            label: "Buyurtma",
+          ),
+          BottomNavigationBarItem(
+            icon: SvgPicture.asset(
+              AppSvg.icMessage,
+              colorFilter: ColorFilter.mode(
+                AppColors.grayColor,
+                BlendMode.srcIn,
+              ),
+            ),
+            activeIcon: SvgPicture.asset(
+              AppSvg.icActiveMessage,
+              colorFilter: ColorFilter.mode(
+                AppColors.mainColor,
+                BlendMode.srcIn,
+              ),
+            ),
+            label: "Yordam",
+          ),
+          BottomNavigationBarItem(
+            icon: SvgPicture.asset(
+              AppSvg.icProfile,
+              colorFilter: ColorFilter.mode(
+                AppColors.grayColor,
+                BlendMode.srcIn,
+              ),
+            ),
+            activeIcon: SvgPicture.asset(
+              AppSvg.icActiveProfile,
+              colorFilter: ColorFilter.mode(
+                AppColors.mainColor,
+                BlendMode.srcIn,
+              ),
+            ),
+            label: "Profil",
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -1,0 +1,39 @@
+class AppSvg {
+  static const baseUrl = "assets/svg";
+  static const icHome = "$baseUrl/ic_home.svg";
+  static const icActiveHome = "$baseUrl/ic_active_home.svg";
+  static const icBox = "$baseUrl/ic_box.svg";
+  static const icActiveBox = "$baseUrl/ic_active_box.svg";
+  static const icMessage = "$baseUrl/ic_message.svg";
+  static const icActiveMessage = "$baseUrl/ic_active_message.svg";
+  static const icProfile = "$baseUrl/ic_profile.svg";
+  static const icActiveProfile = "$baseUrl/ic_active_profile.svg";
+  static const icLocation = "$baseUrl/ic_location.svg";
+  static const icNotifications = "$baseUrl/ic_notifications.svg";
+  static const icWarning = "$baseUrl/ic_warning.svg";
+  static const icId = "$baseUrl/ic_id.svg";
+  static const icPlane = "$baseUrl/ic_plane.svg";
+  static const icBadge = "$baseUrl/ic_badge.svg";
+  static const icStar = "$baseUrl/ic_star.svg";
+  static const icArrow = "$baseUrl/ic_arrow.svg";
+  static const icVideo = "$baseUrl/ic_video.svg";
+  static const icCompany = "$baseUrl/ic_company.svg";
+  static const icContact = "$baseUrl/ic_contact.svg";
+  static const icMoney = "$baseUrl/ic_money.svg";
+  static const icQrCode = "$baseUrl/ic_qr_code.svg";
+  static const icCalculator = "$baseUrl/ic_calculator.svg";
+  static const icCopy = "$baseUrl/ic_copy.svg";
+  static const icInfo = "$baseUrl/ic_info.svg";
+  static const icLanguage = "$baseUrl/ic_language.svg";
+  static const icLogout = "$baseUrl/ic_logout.svg";
+  static const icSettings = "$baseUrl/ic_settings.svg";
+  static const icSend = "$baseUrl/ic_send.svg";
+  static const icFile = "$baseUrl/ic_file.svg";
+  static const icBack = "$baseUrl/ic_back.svg";
+
+  static const orderBaseUrl = "assets/svg/order";
+  static const icWareHouse = "$orderBaseUrl/ic_warehouse.svg";
+  static const icCar = "$orderBaseUrl/ic_car.svg";
+  static const icPoint = "$orderBaseUrl/ic_point.svg";
+  static const icDelivered = "$orderBaseUrl/ic_delivered.svg";
+}
