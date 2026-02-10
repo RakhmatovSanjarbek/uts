@@ -30,6 +30,7 @@ class AppSvg {
   static const icSend = "$baseUrl/ic_send.svg";
   static const icFile = "$baseUrl/ic_file.svg";
   static const icBack = "$baseUrl/ic_back.svg";
+  static const icRefresh = "$baseUrl/ic_refresh.svg";
 
   static const orderBaseUrl = "assets/svg/order";
   static const icWareHouse = "$orderBaseUrl/ic_warehouse.svg";

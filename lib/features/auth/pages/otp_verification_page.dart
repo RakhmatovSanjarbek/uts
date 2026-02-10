@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:pinput/pinput.dart';
+import 'package:uts_cargo/core/extensions/padding_extensions.dart';
 import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/auth/widgets/w_loading_button.dart';
@@ -118,132 +119,114 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         },
         builder: (context, state) {
           final isLoading = state is AuthLoading;
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 36.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        width: 40.0,
-                        height: 40.0,
-                        padding: EdgeInsets.all(6.0),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.whiteColor,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.15),
-                              blurRadius: 8,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: SvgPicture.asset(
-                          AppSvg.icBack,
-                          width: 24.0,
-                          height: 24.0,
-                        ),
-                      ),
-                    ),
-                    const Text(
-                      "Tasdiqlash kodi",
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 36.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      "Orqaga",
                       style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.blackColor,
+                          color: AppColors.mainColor,
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.bold
                       ),
                     ),
-                    SizedBox(width: 40.0),
+                  ).paddingOnly(left: 8.0),
+                  const Text(
+                    "Tasdiqlash kodi",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.blackColor,
+                    ),
+                  ),
+                  SizedBox(width: 48.0),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Sizning ${widget.phoneNumber} raqamingizga 6 xonali kod sms qilib yuborildi",
+                style: TextStyle(color: AppColors.blackColor50, fontSize: 16),
+              ).paddingSymmetric(horizontal: 16.0),
+              const SizedBox(height: 24.0),
+
+              Pinput(
+                length: 6,
+                controller: pinController,
+                focusNode: focusNode,
+                defaultPinTheme: defaultPinTheme,
+                focusedPinTheme: focusedPinTheme,
+                submittedPinTheme: submittedPinTheme,
+                showCursor: true,
+                onCompleted: (pin) => setState(() => isFull = true),
+                onChanged: (value) {
+                  if (value.length < 6) setState(() => isFull = false);
+                },
+              ).paddingSymmetric(horizontal: 16.0),
+
+              const SizedBox(height: 16.0),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Kod kelmadimi? ",
+                      style: TextStyle(
+                        color: AppColors.blackColor,
+                        fontSize: 16.0,
+                      ),
+                    ),
+                    _canResend
+                        ? TextButton(
+                            onPressed: _canResend
+                                ? () {
+                                    startTimer();
+                                  }
+                                : null,
+                            child: Text(
+                              "Qayta yuborish",
+                              style: TextStyle(
+                                color: _canResend
+                                    ? AppColors.mainColor
+                                    : Colors.grey,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16.0,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            timerText,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.mainColor,
+                            ),
+                          ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  "Sizning ${widget.phoneNumber} raqamingizga 6 xonali kod sms qilib yuborildi",
-                  style: TextStyle(color: AppColors.blackColor50, fontSize: 16),
-                ),
-                const SizedBox(height: 24.0),
+              ),
 
-                Pinput(
-                  length: 6,
-                  controller: pinController,
-                  focusNode: focusNode,
-                  defaultPinTheme: defaultPinTheme,
-                  focusedPinTheme: focusedPinTheme,
-                  submittedPinTheme: submittedPinTheme,
-                  showCursor: true,
-                  onCompleted: (pin) => setState(() => isFull = true),
-                  onChanged: (value) {
-                    if (value.length < 6) setState(() => isFull = false);
+              const Spacer(),
+              SafeArea(
+                child: WLoadingButton(
+                  title: "Tasdiqlash",
+                  isOnPressed: isFull,
+                  isLoading: isLoading,
+                  onPressed: () {
+                    context.read<AuthBloc>().add(
+                      OtpEvent(widget.phoneNumber, pinController.text),
+                    );
                   },
                 ),
-
-                const SizedBox(height: 16.0),
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Kod kelmadimi? ",
-                        style: TextStyle(
-                          color: AppColors.blackColor,
-                          fontSize: 16.0,
-                        ),
-                      ),
-                      _canResend
-                          ? TextButton(
-                              onPressed: _canResend
-                                  ? () {
-                                      startTimer();
-                                    }
-                                  : null,
-                              child: Text(
-                                "Qayta yuborish",
-                                style: TextStyle(
-                                  color: _canResend
-                                      ? AppColors.mainColor
-                                      : Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16.0,
-                                ),
-                              ),
-                            )
-                          : Text(
-                              timerText,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.mainColor,
-                              ),
-                            ),
-                    ],
-                  ),
-                ),
-
-                const Spacer(),
-                SafeArea(
-                  child: WLoadingButton(
-                    marginLeft: 0.0,
-                    marginRight: 0.0,
-                    title: "Tasdiqlash",
-                    isOnPressed: isFull,
-                    isLoading: isLoading,
-                    onPressed: () {
-                      context.read<AuthBloc>().add(
-                        OtpEvent(widget.phoneNumber, pinController.text),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),

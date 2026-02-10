@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:uts_cargo/core/theme/app_colors.dart';
+import 'package:uts_cargo/features/home/presentation/widgets/w_quick_button.dart';
 
 import '../../../../core/svg/app_svg.dart';
 
@@ -19,129 +18,19 @@ class WQuickAccess extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: onProhibitedPressed,
-            child: Container(
-              width: MediaQuery.sizeOf(context).width * 0.29,
-              height: 120.0,
-              padding: EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: AppColors.whiteColor,
-                border: Border.all(color: AppColors.mainColor, width: 1.5),
-                borderRadius: BorderRadius.circular(24.0),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 40.0,
-                    height: 40.0,
-                    padding: EdgeInsets.all(8.0),
-                    decoration: BoxDecoration(
-                      color: AppColors.mainColor,
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
-                    child: SvgPicture.asset(
-                      AppSvg.icWarning,
-                      colorFilter: ColorFilter.mode(
-                        AppColors.whiteColor,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      "Taqiqlangan buyumlar",
-                      maxLines: 2,
-                      style: TextStyle(
-                        color: AppColors.blackColor,
-                        fontSize: 14.0,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            child: WQuickButton(
+              icon: AppSvg.icWarning,
+              title: "Taqiqlangan burumlar",
             ),
           ),
-          Container(
-            width: MediaQuery.sizeOf(context).width * 0.29,
-            height: 120.0,
-            padding: EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: AppColors.whiteColor,
-              border: Border.all(color: AppColors.mainColor, width: 1.5),
-              borderRadius: BorderRadius.circular(24.0),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 40.0,
-                  height: 40.0,
-                  padding: EdgeInsets.all(10.0),
-                  decoration: BoxDecoration(
-                    color: AppColors.mainColor,
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                  child: SvgPicture.asset(
-                    AppSvg.icId,
-                    colorFilter: ColorFilter.mode(
-                      AppColors.whiteColor,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    "ID olish yo'riqnoma",
-                    maxLines: 2,
-                    style: TextStyle(
-                      color: AppColors.blackColor,
-                      fontSize: 14.0,
-                    ),
-                  ),
-                ),
-              ],
+          GestureDetector(
+            child: WQuickButton(
+              icon: AppSvg.icCalculator,
+              title: "Kalkulyator (tovat)",
             ),
           ),
-          Container(
-            width: MediaQuery.sizeOf(context).width * 0.29,
-            height: 120.0,
-            padding: EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: AppColors.whiteColor,
-              border: Border.all(color: AppColors.mainColor, width: 1.5),
-              borderRadius: BorderRadius.circular(24.0),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 40.0,
-                  height: 40.0,
-                  padding: EdgeInsets.all(10.0),
-                  decoration: BoxDecoration(
-                    color: AppColors.mainColor,
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                  child: SvgPicture.asset(
-                    AppSvg.icPlane,
-                    colorFilter: ColorFilter.mode(
-                      AppColors.whiteColor,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    "Yetkazib berish",
-                    maxLines: 2,
-                    style: TextStyle(
-                      color: AppColors.blackColor,
-                      fontSize: 14.0,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          GestureDetector(
+            child: WQuickButton(icon: AppSvg.icPlane, title: "Yetkazib berosh"),
           ),
         ],
       ),

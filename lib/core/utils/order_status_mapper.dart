@@ -1,51 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 
-import '../enums/order_status.dart';
-
 class OrderStatusMapper {
-  static String text(OrderStatus status) {
+  static Color color(String status) {
     switch (status) {
-      case OrderStatus.warehouse:
-        return "Omborda";
-      case OrderStatus.pickupPoint:
-        return "Punktda";
-      case OrderStatus.onTheWay:
-        return "Yo‘lda";
-      case OrderStatus.delivered:
-        return "Topshirildi";
-      case OrderStatus.all:
-        return "Barchasi";
-    }
-  }
-
-  static Color color(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.warehouse:
+      case "Omborda":
         return Colors.deepPurple;
-      case OrderStatus.pickupPoint:
+      case "Punktda":
         return Colors.orange;
-      case OrderStatus.onTheWay:
+      case "Yo'lda":
         return Colors.blue;
-      case OrderStatus.delivered:
+      case "Topshirildi":
         return Colors.green;
-      case OrderStatus.all:
+      default:
         return Colors.grey;
     }
   }
 
-  static String icon(OrderStatus status) {
+  static String icon(String status) {
     switch (status) {
-      case OrderStatus.all:
-        return AppSvg.icCar;
-      case OrderStatus.pickupPoint:
-        return AppSvg.icPoint;
-      case OrderStatus.onTheWay:
-        return AppSvg.icCar;
-      case OrderStatus.delivered:
-        return AppSvg.icDelivered;
-      case OrderStatus.warehouse:
+      case "Omborda":
         return AppSvg.icWareHouse;
+      case "Punktda":
+        return AppSvg.icPoint;
+      case "Yo'lda":
+        return AppSvg.icCar;
+      case "Topshirildi":
+        return AppSvg.icDelivered;
+      default:
+        return AppSvg.icCar;
     }
+  }
+
+  static String text(status) {
+    return status.toString();
   }
 }

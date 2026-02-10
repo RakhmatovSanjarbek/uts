@@ -134,7 +134,7 @@ class _WBasicManagementState extends State<WBasicManagement> {
               Container(
                 width: MediaQuery.sizeOf(context).width * 0.44,
                 height: 140.0,
-                padding: EdgeInsets.all(16.0),
+                padding: EdgeInsets.only(left: 16, top: 16, right: 4.0),
                 decoration: BoxDecoration(
                   color: AppColors.whiteColor,
                   borderRadius: BorderRadius.circular(16.0),
@@ -168,15 +168,15 @@ class _WBasicManagementState extends State<WBasicManagement> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 8.0,),
+                        SizedBox(width: 8.0),
                         Expanded(
                           child: Text(
                             "Video darsliklar",
                             style: TextStyle(
                               color: AppColors.blackColor,
-                              fontWeight: FontWeight.bold,
                               fontSize: 14.0,
                             ),
+                            maxLines: 2,
                           ),
                         ),
                         Align(
@@ -188,7 +188,7 @@ class _WBasicManagementState extends State<WBasicManagement> {
                               BlendMode.srcIn,
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ],
@@ -196,24 +196,70 @@ class _WBasicManagementState extends State<WBasicManagement> {
               ),
             ],
           ),
-          SizedBox(height: 8.0,),
+          SizedBox(height: 8.0),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              WActionButton(title: 'Kompaniya haqida', svgPath: AppSvg.icCompany,),
-              WActionButton(title: 'Kontaktlar', svgPath: AppSvg.icContact,),
+              WActionButton(
+                title: 'Kompaniya haqida',
+                svgPath: AppSvg.icCompany,
+              ),
+              WActionButton(title: 'Kontaktlar', svgPath: AppSvg.icContact),
             ],
           ),
-          SizedBox(height: 8.0,),
+          SizedBox(height: 8.0),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              WActionButton(title: 'Xizmat, narx, muddat', svgPath: AppSvg.icMoney, fonSize: 14.0,),
-              WActionButton(title: 'Kodsiz tovarlar', svgPath: AppSvg.icQrCode,),
+              WActionButton(
+                title: 'Xizmat, narx, muddat',
+                svgPath: AppSvg.icMoney,
+                fonSize: 14.0,
+              ),
+              WActionButton(title: 'Kodsiz tovarlar', svgPath: AppSvg.icQrCode),
             ],
           ),
-          SizedBox(height: 8.0,),
-          WActionButton(title: "Kalkulator (tovar)", svgPath: AppSvg.icCalculator, width: double.infinity, fonSize: 16.0,)
+          SizedBox(height: 24.0),
+
+          SizedBox(
+            width: double.infinity,
+            height: 56.0,
+            child: ElevatedButton(
+              onPressed: () {},
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.mainColor,
+                foregroundColor: AppColors.whiteColor,
+                elevation: 6,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+              ),
+
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    "Qo'shimcha paspurt",
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.whiteColor,
+                    ),
+                  ),
+                  SvgPicture.asset(
+                    AppSvg.icBadge,
+                    width: 24,
+                    height: 24,
+                    colorFilter: ColorFilter.mode(
+                      AppColors.whiteColor,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

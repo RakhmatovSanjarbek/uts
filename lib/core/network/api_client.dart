@@ -29,31 +29,13 @@ class ApiClient {
             AuthService.clearToken();
             AuthService.redirectToLogin();
           }
-
           return handler.next(e);
         },
       ),
     );
   }
 
-  Future<Map<String, dynamic>> post(
-      String url, {
-        dynamic body,
-        bool isFormData = false,
-      }) async {
-    final response = await _dio.post(
-      url,
-      data: body,
-      options: Options(
-        headers: {
-          if (isFormData) "Content-Type": "multipart/form-data",
-        },
-      ),
-    );
-    return _handleResponse(response);
-  }
-
-  Future<Map<String, dynamic>> get(
+  Future<dynamic> get(
       String endpoint, {
         Map<String, dynamic>? queryParams,
       }) async {
@@ -64,12 +46,29 @@ class ApiClient {
     return _handleResponse(response);
   }
 
-  Map<String, dynamic> _handleResponse(Response response) {
+  Future<dynamic> post(
+      String path, {
+        dynamic body,
+        bool isMultipart = false,
+      }) async {
+    final response = await _dio.post(
+      path,
+      data: body,
+      options: Options(
+        contentType:
+        isMultipart ? 'multipart/form-data' : 'application/json',
+      ),
+    );
+
+    return _handleResponse(response);
+  }
+
+
+  dynamic _handleResponse(Response response) {
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return response.data is Map<String, dynamic>
-          ? response.data
-          : {"data": response.data};
+      return response.data; // ❗ HECH NIMA O‘RAMA
     }
+
     throw DioException(
       requestOptions: response.requestOptions,
       response: response,
@@ -77,4 +76,5 @@ class ApiClient {
     );
   }
 }
+
 

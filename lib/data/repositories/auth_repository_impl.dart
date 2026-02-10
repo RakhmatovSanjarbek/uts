@@ -1,4 +1,4 @@
-import 'package:uts_cargo/data/datasources/auth_remote_data_source.dart';
+import 'package:uts_cargo/data/datasource/auth_remote_data_source.dart';
 import 'package:uts_cargo/data/models/auth_model/auth_response.dart';
 import 'package:uts_cargo/data/models/auth_model/otp_model.dart';
 import 'package:uts_cargo/data/models/auth_model/sign_in_model.dart';
