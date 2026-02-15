@@ -26,13 +26,14 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(height: 140.0),
                 WQuickAccess(
                   onProhibitedPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => ProhibitedPage()),
-                    );
+                    Navigator.pushNamed(context, "/prohibited");
                   },
                 ),
-                WBasicManagement(),
+                WBasicManagement(
+                  onVideoPressed: () {
+                    Navigator.pushNamed(context, "/video");
+                  },
+                ),
               ],
             ),
           ),

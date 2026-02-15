@@ -1,14 +1,17 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:uts_cargo/core/constants/constants.dart';
+import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
-import '../../../../core/utils/date_utils.dart';
+
 import '../bloc/chat_bloc.dart';
-import '../../../data/models/chat_model/chat_model.dart';
+import '../widgets/w_date_divider.dart';
+import '../widgets/w_message_bubble.dart';
+import '../widgets/w_nput_area.dart';
 
 class SupportChatPage extends StatefulWidget {
   const SupportChatPage({super.key});
@@ -63,11 +66,10 @@ class _SupportChatPageState extends State<SupportChatPage> {
       appBar: AppBar(
         title: const Text(
           "Yordam",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.blackColor),
         ),
         backgroundColor: AppColors.screenColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
         actions: [
           IconButton(
             onPressed: _refreshChat,
@@ -91,12 +93,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
                 if (state is ChatSuccess) {
                   _scrollToBottom();
                 } else if (state is ChatFailure) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.error),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                  context.showSnackBarMessage(state.error);
                 }
               },
               builder: (context, state) {
@@ -106,7 +103,6 @@ class _SupportChatPageState extends State<SupportChatPage> {
 
                 if (state is ChatSuccess) {
                   final messages = state.response.chats;
-
                   return ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(
@@ -114,18 +110,15 @@ class _SupportChatPageState extends State<SupportChatPage> {
                       vertical: 8,
                     ),
                     reverse: false,
-                    // Xabarlar pastdan yuqoriga o'sadi
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final msg = messages[index];
                       final isUser = !msg.isFromAdmin;
-
-                      // Sana dividerini chiqarish logikasi (reverse bo'lgani uchun index + 1)
                       bool showDate = false;
-                      if (index == messages.length - 1) {
+                      if (index == 0) {
                         showDate = true;
                       } else {
-                        final olderMsg = messages[index + 1];
+                        final olderMsg = messages[index - 1];
                         if (!_isSameDay(
                           msg.timestampMs,
                           olderMsg.timestampMs,
@@ -133,16 +126,15 @@ class _SupportChatPageState extends State<SupportChatPage> {
                           showDate = true;
                         }
                       }
-
                       return Column(
                         children: [
                           if (showDate)
-                            _DateDivider(timestamp: msg.timestampMs),
+                            WDateDivider(timestamp: msg.timestampMs),
                           Align(
                             alignment: isUser
                                 ? Alignment.centerRight
                                 : Alignment.centerLeft,
-                            child: _MessageBubble(message: msg, isUser: isUser),
+                            child: WMessageBubble(message: msg, isUser: isUser),
                           ),
                         ],
                       );
@@ -153,7 +145,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
               },
             ),
           ),
-          _InputArea(
+          WInputArea(
             controller: _controller,
             onSend: _sendText,
             onPickImage: _sendImage,
@@ -172,184 +164,5 @@ class _SupportChatPageState extends State<SupportChatPage> {
   Future<void> _refreshChat() async {
     context.read<ChatBloc>().add(GetChatsEvent());
     await Future.delayed(const Duration(seconds: 1));
-  }
-}
-
-class _DateDivider extends StatelessWidget {
-  final int timestamp;
-
-  const _DateDivider({required this.timestamp});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            DateUtilsHelper.formatDay(timestamp),
-            style: TextStyle(
-              color: AppColors.blackColor50,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MessageBubble extends StatelessWidget {
-  final ChatModel message;
-  final bool isUser;
-
-  const _MessageBubble({required this.message, required this.isUser});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 2),
-      padding: const EdgeInsets.all(10),
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.78,
-      ),
-      decoration: BoxDecoration(
-        color: isUser ? AppColors.userColor : AppColors.supportColor,
-        borderRadius: BorderRadius.only(
-          topLeft: const Radius.circular(16),
-          topRight: const Radius.circular(16),
-          bottomLeft: Radius.circular(isUser ? 16 : 4),
-          bottomRight: Radius.circular(isUser ? 4 : 16),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (message.image != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  "${Constants.baseUrl}${message.image!}",
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const SizedBox(
-                      height: 150,
-                      child: Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          if (message.message != null && message.message!.isNotEmpty)
-            Text(
-              message.message!,
-              style: TextStyle(
-                color: isUser ? Colors.white : Colors.black87,
-                fontSize: 14.5,
-              ),
-            ),
-          const SizedBox(height: 2),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                DateUtilsHelper.formatTime(message.timestampMs),
-                style: TextStyle(
-                  fontSize: 10,
-                  color: isUser ? Colors.white70 : Colors.black45,
-                ),
-              ),
-              if (isUser) ...[
-                const SizedBox(width: 4),
-                const Icon(Icons.done_all, size: 13, color: Colors.white70),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InputArea extends StatelessWidget {
-  final TextEditingController controller;
-  final VoidCallback onSend;
-  final VoidCallback onPickImage;
-
-  const _InputArea({
-    required this.controller,
-    required this.onSend,
-    required this.onPickImage,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        12,
-        8,
-        12,
-        MediaQuery.of(context).padding.bottom + 8,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          IconButton(
-            onPressed: onPickImage,
-            icon: SvgPicture.asset(
-              AppSvg.icFile,
-              color: AppColors.mainColor,
-              height: 24,
-            ),
-          ),
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: TextField(
-                controller: controller,
-                maxLines: 5,
-                minLines: 1,
-                decoration: const InputDecoration(
-                  hintText: "Xabar yozing...",
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-          ),
-          CircleAvatar(
-            backgroundColor: AppColors.mainColor,
-            radius: 22,
-            child: IconButton(
-              onPressed: onSend,
-              icon: SvgPicture.asset(
-                AppSvg.icSend,
-                color: Colors.white,
-                height: 20,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

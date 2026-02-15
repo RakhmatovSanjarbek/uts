@@ -1,24 +1,24 @@
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uts_cargo/data/models/order_model/order_model.dart';
-import 'package:uts_cargo/domain/repositories/order_repository.dart';
+import 'package:uts_cargo/data/models/video_model/video_model.dart';
+import 'package:uts_cargo/domain/repositories/video_repository.dart';
 
-part 'order_event.dart';
+part 'video_event.dart';
 
-part 'order_state.dart';
+part 'video_state.dart';
 
-class OrderBloc extends Bloc<OrderEvent, OrderState> {
-  final OrderRepository repository;
+class VideoBloc extends Bloc<VideoEvent, VideoState> {
+  final VideoRepository repository;
 
-  OrderBloc(this.repository) : super(OrderInitial()) {
-    on<GetOrderEvent>((event, emit) async {
-      emit(OrderLoading());
+  VideoBloc(this.repository) : super(VideoInitial()) {
+    on<GetVideoEvent>((event, emit) async {
+      emit(VideoLoading());
       try {
-        final res = await repository.getOrder();
-        emit(OrderSuccess(res));
+        final res = await repository.getVideo();
+        emit(VideoSuccess(res));
       } catch (e) {
-        emit(OrderFailure(_mapErrorToMessage(e)));
+        emit(VideoFailure(_mapErrorToMessage(e)));
       }
     });
   }

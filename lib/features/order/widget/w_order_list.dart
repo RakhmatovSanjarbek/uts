@@ -14,28 +14,35 @@ class WOrderList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (orders.isEmpty) {
-      return Expanded(
-        child: Center(
-          child: Lottie.asset(
-            'assets/lottie/empty.json',
-            animate: true, // Avtomatik boshlash
-            repeat: true, // Takrorlash
-            reverse: false, // Teskari o'ynatish
-            frameRate: FrameRate(60),
-          ),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Lottie.asset(
+              'assets/lottie/empty.json',
+              width: 200,
+              height: 200,
+            ),
+            const Text(
+              'Buyurtmalar topilmadi',
+              style: TextStyle(
+                color: AppColors.grayColor,
+                fontSize: 16,
+              ),
+            ),
+          ],
         ),
       );
     }
 
-    return Expanded(
-      child: ListView.builder(
-        itemCount: orders.length,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemBuilder: (context, index) {
-          final order = orders[index];
-          return _buildOrderItem(order);
-        },
-      ),
+    return ListView.builder(
+      itemCount: orders.length,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemBuilder: (context, index) {
+        final order = orders[index];
+        return _buildOrderItem(order);
+      },
     );
   }
 
@@ -44,77 +51,88 @@ class WOrderList extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.whiteColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Left side
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 "Trak kodi",
-                style: const TextStyle(
-                  fontSize: 14.0,
+                style: TextStyle(
+                  fontSize: 12,
                   color: AppColors.grayColor,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 order.trackCode,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.blackColor,
-                  fontSize: 16.0,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
+
+          // Right side
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              // Status badge
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
+                  horizontal: 12,
+                  vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: OrderStatusMapper.color(order.status).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(16.0),
+                  color: OrderStatusMapper.color(order.status).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     SvgPicture.asset(
                       OrderStatusMapper.icon(order.status),
-                      width: 24.0,
-                      height: 24.0,
+                      width: 18,
+                      height: 18,
                       colorFilter: ColorFilter.mode(
                         OrderStatusMapper.color(order.status),
                         BlendMode.srcIn,
                       ),
                     ),
-                    const SizedBox(width: 8.0),
+                    const SizedBox(width: 6),
                     Text(
                       OrderStatusMapper.text(order.status),
                       style: TextStyle(
                         color: OrderStatusMapper.color(order.status),
-                        fontSize: 14.0,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 8.0),
+              const SizedBox(height: 8),
+              // Date
               Text(
-                order.deliveredAt != null
-                    ? _formatDateTime(order.deliveredAt!)
-                    : _formatDateTime(order.createdAt),
-                style: TextStyle(color: AppColors.grayColor, fontSize: 14.0),
+                _formatDate(order.deliveredAt ?? order.createdAt),
+                style: const TextStyle(
+                  color: AppColors.grayColor,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -123,7 +141,7 @@ class WOrderList extends StatelessWidget {
     );
   }
 
-  String _formatDateTime(DateTime date) {
+  String _formatDate(DateTime date) {
     return DateFormat('dd.MM.yyyy HH:mm').format(date);
   }
 }

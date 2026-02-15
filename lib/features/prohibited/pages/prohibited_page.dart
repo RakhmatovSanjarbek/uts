@@ -13,41 +13,24 @@ class ProhibitedPage extends StatelessWidget {
       backgroundColor: AppColors.screenColor,
       body: Column(
         children: [
-          SizedBox(height: 24.0),
+          SizedBox(height: 32.0),
           Row(
             children: [
-              GestureDetector(
-                onTap: (){
+              IconButton(
+                onPressed: () {
                   Navigator.pop(context);
                 },
-                child: Container(
-                  width: 40.0,
-                  height: 40.0,
-                  padding: EdgeInsets.all(6.0),
-                  margin: EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.whiteColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
-                      ),
-                    ]
-                  ),
-                  child: SvgPicture.asset(
-                    AppSvg.icBack,
-                    width: 24.0,
-                    height: 24.0,
-                  ),
+                icon: SvgPicture.asset(
+                  AppSvg.icBack,
+                  width: 24.0,
+                  height: 24.0,
                 ),
               ),
               Text(
                 "Taqiqlangan tovarlar",
                 style: TextStyle(
                   color: AppColors.blackColor,
-                  fontSize: 16.0,
+                  fontSize: 20.0,
                   fontWeight: FontWeight.bold,
                 ),
               ),

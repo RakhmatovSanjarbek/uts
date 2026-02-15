@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:uts_cargo/core/extensions/padding_extensions.dart';
 import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/features/order/bloc/order_bloc.dart';
+
 import '../../../../data/models/order_model/order_model.dart';
 import '../../../core/svg/app_svg.dart';
 import '../widget/w_category_bar.dart';
 import '../widget/w_order_list.dart';
+import '../widget/w_search_bar.dart';
 
 class OrderPage extends StatefulWidget {
   const OrderPage({super.key});
@@ -20,6 +21,11 @@ class OrderPage extends StatefulWidget {
 class _OrderPageState extends State<OrderPage> {
   String selectedStatus = "Barchasi";
   List<OrderModel> orders = [];
+  List<OrderModel> filteredOrders = [];
+
+  // Qidiruv uchun
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   final List<String> categories = [
     "Barchasi",
@@ -32,12 +38,55 @@ class _OrderPageState extends State<OrderPage> {
   @override
   void initState() {
     super.initState();
+    _loadOrders();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _loadOrders() {
     context.read<OrderBloc>().add(GetOrderEvent());
   }
 
-  List<OrderModel> get _filteredOrders {
-    if (selectedStatus == "Barchasi") return orders;
-    return orders.where((e) => e.status == selectedStatus).toList();
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text;
+      _filterOrders();
+    });
+  }
+
+  void _filterOrders() {
+    // Status bo'yicha filter
+    var statusFiltered = selectedStatus == "Barchasi"
+        ? orders
+        : orders.where((e) => e.status == selectedStatus).toList();
+
+    // Qidiruv bo'yicha filter
+    if (_searchQuery.isNotEmpty) {
+      filteredOrders = statusFiltered.where((order) {
+        return order.trackCode
+            .toLowerCase()
+            .contains(_searchQuery.toLowerCase());
+      }).toList();
+    } else {
+      filteredOrders = statusFiltered;
+    }
+  }
+
+  void _updateSelectedStatus(String status) {
+    setState(() {
+      selectedStatus = status;
+      _filterOrders();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshOrders() async {
+    context.read<OrderBloc>().add(GetOrderEvent());
   }
 
   @override
@@ -51,74 +100,167 @@ class _OrderPageState extends State<OrderPage> {
           }
         },
         builder: (context, state) {
-          if (state is OrderLoading) {
-            return const Center(child: CircularProgressIndicator());
+          if (state is OrderLoading && orders.isEmpty) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: AppColors.mainColor,
+              ),
+            );
           }
 
-          if (state is OrderFailure) {
-            return Center(child: Text(state.error));
+          if (state is OrderFailure && orders.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    state.error,
+                    style: const TextStyle(color: AppColors.grayColor),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadOrders,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.mainColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Qayta urinish'),
+                  ),
+                ],
+              ),
+            );
           }
 
           if (state is OrderSuccess) {
-            orders = state.model.toList();
+            orders = state.model;
+            _filterOrders();
           }
 
-          return RefreshIndicator(
-            onRefresh: _refreshOrders,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 48.0),
-                Row(
+          return Column(
+            children: [
+              // App Bar
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 48,
+                  left: 16,
+                  right: 16,
+                  bottom: 8,
+                ),
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       "Buyurtmalar",
                       style: TextStyle(
-                        color: AppColors.blackColor,
-                        fontSize: 24.0,
+                        fontSize: 28,
                         fontWeight: FontWeight.bold,
+                        color: AppColors.blackColor,
                       ),
                     ),
                     IconButton(
                       onPressed: _refreshOrders,
                       icon: SvgPicture.asset(
                         AppSvg.icRefresh,
-                        width: 24.0,
-                        height: 24.0,
-                        colorFilter: ColorFilter.mode(
+                        width: 24,
+                        height: 24,
+                        colorFilter: const ColorFilter.mode(
                           AppColors.mainColor,
                           BlendMode.srcIn,
                         ),
                       ),
                     ),
                   ],
-                ).paddingOnly(left: 16.0, right: 10.0),
-                const SizedBox(height: 16.0),
+                ),
+              ),
 
-                WCategoryBar(
-                  categories: categories,
-                  selectedStatus: selectedStatus,
-                  onStatusSelected: (status) {
-                    setState(() {
-                      selectedStatus = status;
-                    });
-                  },
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: WSearchBar(
+                  controller: _searchController,
+                  onSearch: (query) {},
+                  hintText: 'Trak kod bo\'yicha qidirish...',
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Category Bar
+              WCategoryBar(
+                categories: categories,
+                selectedStatus: selectedStatus,
+                onStatusSelected: _updateSelectedStatus,
+              ),
+
+              const SizedBox(height: 8),
+
+              // Results info
+              if (_searchQuery.isNotEmpty || selectedStatus != "Barchasi")
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${filteredOrders.length} ta buyurtma',
+                        style: const TextStyle(
+                          color: AppColors.grayColor,
+                          fontSize: 13,
+                        ),
+                      ),
+                      if (_searchQuery.isNotEmpty)
+                        GestureDetector(
+                          onTap: () {
+                            _searchController.clear();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.grayColor200,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: AppColors.grayColor,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Tozalash',
+                                  style: TextStyle(
+                                    color: AppColors.grayColor,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
 
-                const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
-                WOrderList(orders: _filteredOrders),
-              ],
-            ),
+              // Orders List
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _refreshOrders,
+                  color: AppColors.mainColor,
+                  child: WOrderList(orders: filteredOrders),
+                ),
+              ),
+            ],
           );
         },
       ),
     );
-  }
-
-  Future<void> _refreshOrders() async {
-    context.read<OrderBloc>().add(GetOrderEvent());
-    await Future.delayed(const Duration(seconds: 1));
   }
 }

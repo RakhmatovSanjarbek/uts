@@ -6,23 +6,30 @@ import 'package:uts_cargo/data/datasource/auth_remote_data_source.dart';
 import 'package:uts_cargo/data/datasource/chat_remote_data_source.dart';
 import 'package:uts_cargo/data/datasource/order_remote_data_source.dart';
 import 'package:uts_cargo/data/datasource/profile_remote_data_source.dart';
+import 'package:uts_cargo/data/datasource/video_remote_data_source.dart';
 import 'package:uts_cargo/data/repositories/auth_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/chat_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/order_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/profile_repository_impl.dart';
+import 'package:uts_cargo/data/repositories/video_repository_impl.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/auth/pages/enter_full_info_page.dart';
 import 'package:uts_cargo/features/auth/pages/otp_verification_page.dart';
 import 'package:uts_cargo/features/auth/pages/sign_in_page.dart';
 import 'package:uts_cargo/features/dashboard/dashboard_page.dart';
 import 'package:uts_cargo/features/profile/bloc/profile_bloc.dart';
+import 'package:uts_cargo/features/prohibited/pages/prohibited_page.dart';
 import 'package:uts_cargo/features/splash/splash_page.dart';
 import 'package:uts_cargo/features/support/bloc/chat_bloc.dart';
+import 'package:uts_cargo/features/video_lesson/bloc/video_bloc.dart';
 
 import 'core/constants/constants.dart';
 import 'features/order/bloc/order_bloc.dart';
+import 'features/video_lesson/pages/Video_page.dart';
 
-void main() {
+void main(){
+  WidgetsFlutterBinding.ensureInitialized();
+
   final apiClient = ApiClient();
   final authDataSource = AuthRemoteDataSource(apiClient);
   final authRepository = AuthRepositoryImpl(authDataSource);
@@ -35,12 +42,16 @@ void main() {
 
   final chatDataSource = ChatRemoteDataSource(apiClient);
   final chatRepository = ChatRepositoryImpl(chatDataSource);
+
+  final videoDataSource = VideoRemoteDataSource(apiClient);
+  final videoRepository = VideoRepositoryImpl(videoDataSource);
   runApp(
     MyApp(
       authRepository: authRepository,
       userRepository: userRepository,
       orderRepository: orderRepository,
       chatRepository: chatRepository,
+      videoRepository: videoRepository,
     ),
   );
 }
@@ -50,6 +61,7 @@ class MyApp extends StatelessWidget {
   final ProfileRepositoryImpl userRepository;
   final OrderRepositoryImpl orderRepository;
   final ChatRepositoryImpl chatRepository;
+  final VideoRepositoryImpl videoRepository;
 
   const MyApp({
     super.key,
@@ -57,6 +69,7 @@ class MyApp extends StatelessWidget {
     required this.userRepository,
     required this.orderRepository,
     required this.chatRepository,
+    required this.videoRepository,
   });
 
   @override
@@ -67,6 +80,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => ProfileBloc(userRepository)),
         BlocProvider(create: (_) => OrderBloc(orderRepository)),
         BlocProvider(create: (_) => ChatBloc(chatRepository)),
+        BlocProvider(create: (_) => VideoBloc(videoRepository))
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -83,6 +97,8 @@ class MyApp extends StatelessWidget {
             final phone = ModalRoute.of(context)!.settings.arguments as String;
             return OtpVerificationPage(phoneNumber: phone);
           },
+          "/prohibited": (context) => ProhibitedPage(),
+          "/video": (context) => VideoPage()
         },
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: AppColors.mainColor),
