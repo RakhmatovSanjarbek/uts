@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:uts_cargo/features/home/presentation/widgets/w_quick_button.dart';
+import 'package:uts_cargo/features/home/widgets/w_quick_button.dart';
 
 import '../../../../core/svg/app_svg.dart';
 
 class WQuickAccess extends StatelessWidget {
   final VoidCallback onProhibitedPressed;
+  final VoidCallback onCalculatorPressed;
 
-  const WQuickAccess({super.key, required this.onProhibitedPressed});
+  const WQuickAccess({
+    super.key,
+    required this.onProhibitedPressed,
+    required this.onCalculatorPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +29,14 @@ class WQuickAccess extends StatelessWidget {
             ),
           ),
           GestureDetector(
+            onTap: onCalculatorPressed,
             child: WQuickButton(
               icon: AppSvg.icCalculator,
               title: "Kalkulyator (tovat)",
             ),
           ),
           GestureDetector(
-            child: WQuickButton(icon: AppSvg.icPlane, title: "Yetkazib berosh"),
+            child: WQuickButton(icon: AppSvg.icPlane, title: "Yetkazib berish", isActive: false,),
           ),
         ],
       ),

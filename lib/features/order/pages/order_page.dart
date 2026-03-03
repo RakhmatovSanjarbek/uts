@@ -22,8 +22,6 @@ class _OrderPageState extends State<OrderPage> {
   String selectedStatus = "Barchasi";
   List<OrderModel> orders = [];
   List<OrderModel> filteredOrders = [];
-
-  // Qidiruv uchun
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -54,12 +52,10 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   void _filterOrders() {
-    // Status bo'yicha filter
     var statusFiltered = selectedStatus == "Barchasi"
         ? orders
         : orders.where((e) => e.status == selectedStatus).toList();
 
-    // Qidiruv bo'yicha filter
     if (_searchQuery.isNotEmpty) {
       filteredOrders = statusFiltered.where((order) {
         return order.trackCode

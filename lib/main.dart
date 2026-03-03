@@ -16,7 +16,9 @@ import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/auth/pages/enter_full_info_page.dart';
 import 'package:uts_cargo/features/auth/pages/otp_verification_page.dart';
 import 'package:uts_cargo/features/auth/pages/sign_in_page.dart';
+import 'package:uts_cargo/features/calculator/pages/calculator_page.dart';
 import 'package:uts_cargo/features/dashboard/dashboard_page.dart';
+import 'package:uts_cargo/features/home/pages/about_page.dart';
 import 'package:uts_cargo/features/profile/bloc/profile_bloc.dart';
 import 'package:uts_cargo/features/prohibited/pages/prohibited_page.dart';
 import 'package:uts_cargo/features/splash/splash_page.dart';
@@ -27,7 +29,7 @@ import 'core/constants/constants.dart';
 import 'features/order/bloc/order_bloc.dart';
 import 'features/video_lesson/pages/Video_page.dart';
 
-void main(){
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   final apiClient = ApiClient();
@@ -80,7 +82,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => ProfileBloc(userRepository)),
         BlocProvider(create: (_) => OrderBloc(orderRepository)),
         BlocProvider(create: (_) => ChatBloc(chatRepository)),
-        BlocProvider(create: (_) => VideoBloc(videoRepository))
+        BlocProvider(create: (_) => VideoBloc(videoRepository)),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -98,7 +100,9 @@ class MyApp extends StatelessWidget {
             return OtpVerificationPage(phoneNumber: phone);
           },
           "/prohibited": (context) => ProhibitedPage(),
-          "/video": (context) => VideoPage()
+          "/video": (context) => VideoPage(),
+          "/calculator": (context) => CalculatorPage(),
+          "/about": (context) => AboutPage(),
         },
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: AppColors.mainColor),

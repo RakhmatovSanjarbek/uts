@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
-import 'package:uts_cargo/features/home/presentation/widgets/w_basic_management.dart';
-import 'package:uts_cargo/features/home/presentation/widgets/w_home_toolbar.dart';
-import 'package:uts_cargo/features/home/presentation/widgets/w_quick_access.dart';
-import 'package:uts_cargo/features/prohibited/pages/prohibited_page.dart';
+import 'package:uts_cargo/features/home/widgets/w_basic_management.dart';
+import 'package:uts_cargo/features/home/widgets/w_home_toolbar.dart';
+import 'package:uts_cargo/features/home/widgets/w_quick_access.dart';
+import 'package:uts_cargo/features/home/widgets/w_warehouse_bottom_sheet.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,10 +28,17 @@ class _HomePageState extends State<HomePage> {
                   onProhibitedPressed: () {
                     Navigator.pushNamed(context, "/prohibited");
                   },
+                  onCalculatorPressed: () {
+                    Navigator.pushNamed(context, "/calculator");
+                  },
                 ),
                 WBasicManagement(
                   onVideoPressed: () {
                     Navigator.pushNamed(context, "/video");
+                  },
+                  onWarehousePressed: () => _showWarehouseBottomSheet(context),
+                  onAboutPressed: () {
+                    Navigator.pushNamed(context, "/about");
                   },
                 ),
               ],
@@ -39,6 +46,17 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showWarehouseBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return const WWarehouseBottomSheet(userId: "UTS-003");
+      },
     );
   }
 }

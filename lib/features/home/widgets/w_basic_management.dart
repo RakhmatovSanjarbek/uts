@@ -2,13 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
-import 'package:uts_cargo/features/home/presentation/widgets/w_action_button.dart';
+import 'package:uts_cargo/features/home/widgets/w_action_button.dart';
 
 import '../../../../core/svg/app_svg.dart';
 
 class WBasicManagement extends StatelessWidget {
   final VoidCallback onVideoPressed;
-  const WBasicManagement({super.key, required this.onVideoPressed});
+  final VoidCallback onWarehousePressed;
+  final VoidCallback onAboutPressed;
+
+  const WBasicManagement({
+    super.key,
+    required this.onVideoPressed,
+    required this.onWarehousePressed,
+    required this.onAboutPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -87,31 +95,34 @@ class WBasicManagement extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 8.0),
-                  Container(
-                    width: MediaQuery.sizeOf(context).width * 0.44,
-                    height: 60.0,
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    alignment: Alignment.centerLeft,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [AppColors.btn1Color, AppColors.btn2Color],
-                      ),
-                      borderRadius: BorderRadius.circular(16.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 8,
-                          offset: Offset(0, 4),
+                  GestureDetector(
+                    onTap: onWarehousePressed,
+                    child: Container(
+                      width: MediaQuery.sizeOf(context).width * 0.44,
+                      height: 60.0,
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      alignment: Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [AppColors.btn1Color, AppColors.btn2Color],
                         ),
-                      ],
-                    ),
-                    child: Text(
-                      "Omborlar manzili",
-                      style: TextStyle(
-                        color: AppColors.whiteColor,
-                        fontSize: 16.0,
+                        borderRadius: BorderRadius.circular(16.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        "Omborlar manzili",
+                        style: TextStyle(
+                          color: AppColors.whiteColor,
+                          fontSize: 16.0,
+                        ),
                       ),
                     ),
                   ),
@@ -216,6 +227,7 @@ class WBasicManagement extends StatelessWidget {
               WActionButton(
                 title: 'Kompaniya haqida',
                 svgPath: AppSvg.icCompany,
+                onPressed: onAboutPressed,
               ),
               WActionButton(title: 'Kontaktlar', svgPath: AppSvg.icContact),
             ],

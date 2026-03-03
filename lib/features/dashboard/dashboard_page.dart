@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:uts_cargo/features/home/presentation/pages/home_page.dart';
+import 'package:uts_cargo/features/home/pages/home_page.dart';
 import 'package:uts_cargo/features/profile/pages/profile_page.dart';
 import 'package:uts_cargo/features/support/pages/support_chat_page.dart';
 
