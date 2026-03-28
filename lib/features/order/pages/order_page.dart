@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/features/order/bloc/order_bloc.dart';
 
@@ -147,8 +148,8 @@ class _OrderPageState extends State<OrderPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      "Buyurtmalar",
+                    Text(
+                      AppStrings.orders,
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -177,7 +178,7 @@ class _OrderPageState extends State<OrderPage> {
                 child: WSearchBar(
                   controller: _searchController,
                   onSearch: (query) {},
-                  hintText: 'Trak kod bo\'yicha qidirish...',
+                  hintText: AppStrings.searchByTrack,
                 ),
               ),
 
@@ -200,7 +201,7 @@ class _OrderPageState extends State<OrderPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '${filteredOrders.length} ta buyurtma',
+                        '${filteredOrders.length} ${AppStrings.orderCount}',
                         style: const TextStyle(
                           color: AppColors.grayColor,
                           fontSize: 13,
@@ -220,7 +221,7 @@ class _OrderPageState extends State<OrderPage> {
                               color: AppColors.grayColor200,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
                                 Icon(
                                   Icons.close,
@@ -229,7 +230,7 @@ class _OrderPageState extends State<OrderPage> {
                                 ),
                                 SizedBox(width: 4),
                                 Text(
-                                  'Tozalash',
+                                  AppStrings.clear,
                                   style: TextStyle(
                                     color: AppColors.grayColor,
                                     fontSize: 12,

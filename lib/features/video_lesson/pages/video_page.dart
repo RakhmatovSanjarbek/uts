@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'dart:convert';
 
 import 'package:uts_cargo/core/theme/app_colors.dart';
@@ -65,8 +66,8 @@ class _VideoPageState extends State<VideoPage> {
     return Scaffold(
       backgroundColor: AppColors.screenColor,
       appBar: AppBar(
-        title: const Text(
-          'Video Darslar',
+        title: Text(
+          AppStrings.videoLessons,
           style: TextStyle(
             color: AppColors.blackColor,
             fontWeight: FontWeight.bold,

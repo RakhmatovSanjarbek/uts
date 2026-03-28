@@ -1,11 +1,15 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
 import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/auth/widgets/w_loading_button.dart';
 import 'package:uts_cargo/features/auth/widgets/w_phone_number.dart';
+
+import '../../profile/widgets/w_language_bottom_sheet.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -56,8 +60,31 @@ class _SignInPageState extends State<SignInPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      GestureDetector(
+                        onTap: () => _showLanguageBottomSheet(context),
+                        child: Align(
+                          alignment: Alignment.topRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                AppStrings.language,
+                                style: TextStyle(
+                                  color: AppColors.blackColor,
+                                  fontSize: 16.0,
+                                ),
+                              ),
+                              SizedBox(width: 8.0,),
+                              CircleAvatar(
+                                radius: 16.0,
+                                backgroundImage: _getLangImage(context),
+                              )
+                            ],
+                          ),
+                        ).paddingOnly(right: 16.0),
+                      ),
                       Text(
-                        "Kirish",
+                        AppStrings.login,
                         style: TextStyle(
                           color: AppColors.blackColor,
                           fontSize: 20.0,
@@ -65,7 +92,7 @@ class _SignInPageState extends State<SignInPage> {
                         ),
                       ).paddingSymmetric(horizontal: 16.0),
                       Text(
-                        "Telefon raqamingizni kiriting",
+                        AppStrings.enterPhone,
                         style: TextStyle(
                           color: AppColors.blackColor50,
                           fontSize: 16.0,
@@ -87,10 +114,10 @@ class _SignInPageState extends State<SignInPage> {
               Column(
                 children: [
                   WLoadingButton(
-                    title: "Kirish",
+                    title: AppStrings.login,
                     onPressed: () {
                       context.read<AuthBloc>().add(
-                        SignInEvent(_phoneNumber(phoneNumber.text))
+                        SignInEvent(_phoneNumber(phoneNumber.text)),
                       );
                     },
                     isOnPressed: isOnPressed,
@@ -119,7 +146,7 @@ class _SignInPageState extends State<SignInPage> {
                             ),
                             Expanded(
                               child: Text(
-                                "Ilovaga kirishdan avval foydalanish shartlari bilan tanishib chiqing",
+                                AppStrings.termsAgreement,
                                 style: TextStyle(
                                   color: AppColors.blackColor50,
                                   fontSize: 16.0,
@@ -132,7 +159,7 @@ class _SignInPageState extends State<SignInPage> {
                         TextButton(
                           onPressed: () {},
                           child: Text(
-                            "Foydalanish shartlari",
+                            AppStrings.usageTerms,
                             style: TextStyle(
                               color: AppColors.mainColor,
                               fontSize: 16.0,
@@ -148,6 +175,21 @@ class _SignInPageState extends State<SignInPage> {
           );
         },
       ),
+    );
+  }
+
+  AssetImage _getLangImage(BuildContext context) {
+    final locale = context.locale.toString();
+    if (locale.contains('uz')) return AssetImage("assets/images/uz_flag.png");
+    if (locale.contains('ru')) return AssetImage("assets/images/ru_flag.png");
+    return AssetImage("assets/images/uz_flag.png");
+  }
+
+  void _showLanguageBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const WLanguageBottomSheet(),
     );
   }
 

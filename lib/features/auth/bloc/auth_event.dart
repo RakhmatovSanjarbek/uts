@@ -12,20 +12,10 @@ class SignInEvent extends AuthEvent {
 }
 
 class SignUpEvent extends AuthEvent {
-  final String phone;
-  final String firstName;
-  final String lastName;
-  final String jshshir;
-  final String passportSeries;
-  final String birthDate;
+  final SignUpModel model;
 
   SignUpEvent(
-    this.phone,
-    this.firstName,
-    this.lastName,
-    this.jshshir,
-    this.passportSeries,
-    this.birthDate,
+    this.model
   );
 }
 

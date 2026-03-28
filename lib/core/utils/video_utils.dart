@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 
 class VideoUtils {
-  // YouTube URL dan video ID olish
   static String? extractVideoId(String url) {
-    // https://youtu.be/C3sVjpiU1P4?si=... format uchun
     final regExp1 = RegExp(r'youtu\.be\/([a-zA-Z0-9_-]{11})');
-    // https://www.youtube.com/watch?v=... format uchun
     final regExp2 = RegExp(r'watch\?v=([a-zA-Z0-9_-]{11})');
-    // https://www.youtube.com/embed/... format uchun
     final regExp3 = RegExp(r'embed\/([a-zA-Z0-9_-]{11})');
 
     Match? match = regExp1.firstMatch(url);
@@ -19,13 +15,9 @@ class VideoUtils {
     }
     return null;
   }
-
-  // YouTube thumbnail olish
   static String getThumbnailUrl(String videoId) {
     return 'https://img.youtube.com/vi/$videoId/maxresdefault.jpg';
   }
-
-  // Sanani formatlash
   static String formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
@@ -44,8 +36,6 @@ class VideoUtils {
       return '${date.day}.${date.month}.${date.year}';
     }
   }
-
-  // Video sarlavhasini qisqartirish
   static String formatTitle(String title, {int maxLength = 50}) {
     if (title.length <= maxLength) return title;
     return '${title.substring(0, maxLength)}...';

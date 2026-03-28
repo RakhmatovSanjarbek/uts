@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 
 class WTinNumber extends StatefulWidget {
@@ -63,7 +64,7 @@ class _WTinNumberState extends State<WTinNumber> {
         inputFormatters: [maskFormatter],
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
-          hintText: 'JSHSHIR',
+          hintText: AppStrings.pinfl,
           border: InputBorder.none,
           isCollapsed: true,
         ),

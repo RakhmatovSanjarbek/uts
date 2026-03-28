@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/features/prohibited/data/mock/prohibited_list.dart';
@@ -27,7 +28,7 @@ class ProhibitedPage extends StatelessWidget {
                 ),
               ),
               Text(
-                "Taqiqlangan tovarlar",
+                AppStrings.prohibitedItems,
                 style: TextStyle(
                   color: AppColors.blackColor,
                   fontSize: 20.0,

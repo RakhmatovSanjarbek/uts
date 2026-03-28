@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 
 import '../../../../core/svg/app_svg.dart';
 
 class WHomeToolbar extends StatelessWidget {
-  const WHomeToolbar({super.key});
+  final VoidCallback onLocationPressed;
+
+  const WHomeToolbar({super.key, required this.onLocationPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -25,26 +28,29 @@ class WHomeToolbar extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 48.0,
-                height: 48.0,
-                padding: EdgeInsets.all(6.0),
-                decoration: BoxDecoration(
-                  color: AppColors.whiteColor,
-                  borderRadius: BorderRadius.circular(24.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
+              GestureDetector(
+                onTap: onLocationPressed,
+                child: Container(
+                  width: 48.0,
+                  height: 48.0,
+                  padding: EdgeInsets.all(6.0),
+                  decoration: BoxDecoration(
+                    color: AppColors.whiteColor,
+                    borderRadius: BorderRadius.circular(24.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: SvgPicture.asset(
+                    AppSvg.icLocation,
+                    colorFilter: ColorFilter.mode(
+                      AppColors.mainColor,
+                      BlendMode.srcIn,
                     ),
-                  ],
-                ),
-                child: SvgPicture.asset(
-                  AppSvg.icLocation,
-                  colorFilter: ColorFilter.mode(
-                    AppColors.mainColor,
-                    BlendMode.srcIn,
                   ),
                 ),
               ),
@@ -54,18 +60,18 @@ class WHomeToolbar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Olib ketish manzili",
+                    AppStrings.pickupAddress,
                     style: TextStyle(
                       color: AppColors.grayColor,
                       fontSize: 14.0,
                     ),
                   ),
                   Text(
-                    "Yunusobod 14, 47",
+                    "Beruniy ko'chasi, 30",
                     style: TextStyle(
-                      color: AppColors.whiteColor,
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold
+                        color: AppColors.whiteColor,
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.bold
                     ),
                   ),
                 ],

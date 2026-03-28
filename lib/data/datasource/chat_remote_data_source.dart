@@ -21,7 +21,7 @@ class ChatRemoteDataSource {
     final token = await getToken();
     final client = ApiClient(token: token);
 
-    final res = await client.get('/api/cargo/chat/');
+    final res = await client.get('/api/services/chat/');
     return ChatResponse.fromJson(res);
   }
 
@@ -39,9 +39,9 @@ class ChatRemoteDataSource {
     });
 
     await client.post(
-      '/api/cargo/chat/',
+      '/api/services/chat/',
       body: formData,
-      isMultipart: true, // 👈 MUHIM
+      isMultipart: true,
     );
   }
 

@@ -22,18 +22,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthLoading());
 
       try {
-        final res = await repository.signIn(
-          SignInModel(phone: event.phone),
-        );
+        final res = await repository.signIn(SignInModel(phone: event.phone));
         emit(AuthSuccess(res));
       } on DioException catch (e) {
-        // 🔥 404 — USER YO‘Q → REGISTER
         if (e.response?.statusCode == 404) {
           emit(AuthNeedRegister(event.phone));
         } else {
           final message =
-              e.response?.data["message"]?.toString() ??
-                  "Xatolik yuz berdi";
+              e.response?.data["message"]?.toString() ?? "Xatolik yuz berdi";
           emit(AuthFailure(message));
         }
       } catch (e) {
@@ -41,18 +37,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     });
 
-
     on<SignUpEvent>((event, emit) async {
       emit(AuthLoading());
       try {
         final res = await repository.signUp(
           SignUpModel(
-            phone: event.phone,
-            firstName: event.firstName,
-            lastName: event.lastName,
-            jshshir: event.jshshir,
-            passportSeries: event.passportSeries,
-            birthDate: event.birthDate,
+            phone: event.model.phone,
+            firstName: event.model.firstName,
+            lastName: event.model.lastName,
+            jshshir: event.model.jshshir,
+            passportSeries: event.model.passportSeries,
+            birthDate: event.model.birthDate,
+            address: event.model.address,
           ),
         );
         emit(AuthSuccess(res));
@@ -67,7 +63,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final res = await repository.otp(
           OtpModel(phone: event.phone, code: event.code),
         );
-        if (res.token!=null){
+        if (res.token != null) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(Constants.token, res.token!);
         }
@@ -88,8 +84,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             "Serverda xatolik yuz berdi";
       }
 
-      if (e.type == DioExceptionType.connectionTimeout) return "Internet aloqasi juda sekin";
-      if (e.type == DioExceptionType.connectionError) return "Internet bilan aloqa yo'q";
+      if (e.type == DioExceptionType.connectionTimeout)
+        return "Internet aloqasi juda sekin";
+      if (e.type == DioExceptionType.connectionError)
+        return "Internet bilan aloqa yo'q";
 
       return "Tarmoq xatoligi yuz berdi";
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/features/home/pages/home_page.dart';
 import 'package:uts_cargo/features/profile/pages/profile_page.dart';
 import 'package:uts_cargo/features/support/pages/support_chat_page.dart';
@@ -30,6 +31,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       backgroundColor: AppColors.screenColor,
       body: IndexedStack(
+        key: ValueKey(Localizations.localeOf(context).languageCode),
         index: _currentIndex,
         children: _screens,
       ),
@@ -72,7 +74,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 BlendMode.srcIn,
               ),
             ),
-            label: "Asosiy",
+            label: AppStrings.main,
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
@@ -89,7 +91,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 BlendMode.srcIn,
               ),
             ),
-            label: "Buyurtma",
+            label: AppStrings.order,
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
@@ -106,7 +108,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 BlendMode.srcIn,
               ),
             ),
-            label: "Yordam",
+            label: AppStrings.help,
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
@@ -123,7 +125,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 BlendMode.srcIn,
               ),
             ),
-            label: "Profil",
+            label: AppStrings.profile,
           ),
         ],
       ),

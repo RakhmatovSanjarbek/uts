@@ -7,6 +7,7 @@ class UserModel {
   final String jshshir;
   final String passportSeries;
   final String birthDate;
+  final String address;
 
   UserModel({
     required this.id,
@@ -17,6 +18,7 @@ class UserModel {
     required this.jshshir,
     required this.passportSeries,
     required this.birthDate,
+    required this.address,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,21 @@ class UserModel {
       jshshir: json['jshshir'],
       passportSeries: json['passport_series'],
       birthDate: json['birth_date'],
+      address: json['address'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'phone': phone,
+      'first_name': firstName,
+      'last_name': lastName,
+      'jshshir': jshshir,
+      'passport_series': passportSeries,
+      'birth_date': birthDate,
+      'address': address,
+    };
   }
 }

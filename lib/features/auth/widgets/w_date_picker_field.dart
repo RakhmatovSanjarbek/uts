@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'package:uts_cargo/core/theme/app_colors.dart'; // O'zingizning papkangizga moslang
+import 'package:uts_cargo/core/string/app_string.dart';
+import 'package:uts_cargo/core/theme/app_colors.dart';
 
 class WDatePickerField extends StatefulWidget {
   final TextEditingController controller;
   final ValueChanged<String>? onChanged;
-  final String hintText;
 
   const WDatePickerField({
     super.key,
     required this.controller,
     this.onChanged,
-    this.hintText = 'KK/OO/YYYY',
   });
 
   @override
@@ -20,8 +19,6 @@ class WDatePickerField extends StatefulWidget {
 
 class _WDatePickerFieldState extends State<WDatePickerField> {
   final FocusNode _focusNode = FocusNode();
-
-  // Sana uchun maska: 00/00/0000
   final maskFormatter = MaskTextInputFormatter(
     mask: '##/##/####',
     filter: {"#": RegExp(r'[0-9]')},
@@ -41,8 +38,6 @@ class _WDatePickerFieldState extends State<WDatePickerField> {
     _focusNode.dispose();
     super.dispose();
   }
-
-  // Kalendarni ochish funksiyasi
   Future<void> _selectDate(BuildContext context) async {
     DateTime? picked = await showDatePicker(
       context: context,
@@ -53,8 +48,8 @@ class _WDatePickerFieldState extends State<WDatePickerField> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: AppColors.mainColor, // Kalendar asosiy rangi
-              onPrimary: Colors.white,
+              primary: AppColors.mainColor,
+              onPrimary: AppColors.whiteColor,
               onSurface: AppColors.blackColor,
             ),
           ),
@@ -64,7 +59,6 @@ class _WDatePickerFieldState extends State<WDatePickerField> {
     );
 
     if (picked != null) {
-      // Tanlangan sanani KK/OO/YYYY formatiga o'tkazish
       String day = picked.day.toString().padLeft(2, '0');
       String month = picked.month.toString().padLeft(2, '0');
       String year = picked.year.toString();
@@ -73,7 +67,6 @@ class _WDatePickerFieldState extends State<WDatePickerField> {
 
       setState(() {
         widget.controller.text = formattedDate;
-        // Mask formatter ichki holatini yangilash uchun
         maskFormatter.updateMask(mask: '##/##/####', newValue: TextEditingValue(text: formattedDate));
       });
 
@@ -91,7 +84,7 @@ class _WDatePickerFieldState extends State<WDatePickerField> {
       width: double.infinity,
       height: 56.0,
       margin: const EdgeInsets.symmetric(horizontal: 16.0),
-      padding: const EdgeInsets.only(left: 16.0, right: 8.0), // O'ng tomonda icon uchun joy
+      padding: const EdgeInsets.only(left: 16.0, right: 8.0),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.screenColor,
@@ -111,7 +104,7 @@ class _WDatePickerFieldState extends State<WDatePickerField> {
               inputFormatters: [maskFormatter],
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                hintText: widget.hintText,
+                hintText: AppStrings.dateFormat,
                 border: InputBorder.none,
                 isCollapsed: true,
               ),

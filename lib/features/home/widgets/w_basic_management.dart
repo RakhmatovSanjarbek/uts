@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/features/home/widgets/w_action_button.dart';
 
@@ -10,12 +11,16 @@ class WBasicManagement extends StatelessWidget {
   final VoidCallback onVideoPressed;
   final VoidCallback onWarehousePressed;
   final VoidCallback onAboutPressed;
+  final VoidCallback onPricePressed;
+  final VoidCallback onContactPressed;
 
   const WBasicManagement({
     super.key,
     required this.onVideoPressed,
     required this.onWarehousePressed,
     required this.onAboutPressed,
+    required this.onPricePressed,
+    required this.onContactPressed,
   });
 
   @override
@@ -58,7 +63,7 @@ class WBasicManagement extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Ball",
+                              AppStrings.ball,
                               style: TextStyle(
                                 color: AppColors.blackColor,
                                 fontSize: 18.0,
@@ -118,7 +123,7 @@ class WBasicManagement extends StatelessWidget {
                         ],
                       ),
                       child: Text(
-                        "Omborlar manzili",
+                        AppStrings.warehouseAddress,
                         style: TextStyle(
                           color: AppColors.whiteColor,
                           fontSize: 16.0,
@@ -178,7 +183,7 @@ class WBasicManagement extends StatelessWidget {
                           SizedBox(width: 8.0),
                           Expanded(
                             child: Text(
-                              "Video darsliklar",
+                              AppStrings.videoTutorials,
                               style: TextStyle(
                                 color: AppColors.whiteColor,
                                 fontSize: 14.0,
@@ -225,11 +230,15 @@ class WBasicManagement extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               WActionButton(
-                title: 'Kompaniya haqida',
+                title: AppStrings.aboutCompany,
                 svgPath: AppSvg.icCompany,
                 onPressed: onAboutPressed,
               ),
-              WActionButton(title: 'Kontaktlar', svgPath: AppSvg.icContact),
+              WActionButton(
+                title: AppStrings.contacts,
+                svgPath: AppSvg.icContact,
+                onPressed: onContactPressed,
+              ),
             ],
           ),
           SizedBox(height: 8.0),
@@ -237,37 +246,13 @@ class WBasicManagement extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               WActionButton(
-                title: 'Xizmat, narx, muddat',
+                title: AppStrings.servicePriceTerm,
                 svgPath: AppSvg.icMoney,
                 fonSize: 14.0,
+                onPressed: onPricePressed,
               ),
-              WActionButton(title: 'Kodsiz tovarlar', svgPath: AppSvg.icQrCode),
+              WActionButton(title: AppStrings.noCodeGoods, svgPath: AppSvg.icQrCode),
             ],
-          ),
-          SizedBox(height: 24.0),
-
-          SizedBox(
-            width: double.infinity,
-            height: 60.0,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.mainColor,
-                foregroundColor: AppColors.whiteColor,
-                elevation: 6,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-              ),
-              child: Text(
-                "QO'SHIMCHA PASPURT",
-                style: TextStyle(
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.whiteColor,
-                ),
-              ),
-            ),
           ),
         ],
       ),

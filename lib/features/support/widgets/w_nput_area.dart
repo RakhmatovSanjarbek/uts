@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 
 import '../../../core/svg/app_svg.dart';
 import '../../../core/theme/app_colors.dart';
@@ -52,8 +53,8 @@ class WInputArea extends StatelessWidget {
                 controller: controller,
                 maxLines: 5,
                 minLines: 1,
-                decoration: const InputDecoration(
-                  hintText: "Xabar yozing...",
+                decoration: InputDecoration(
+                  hintText: AppStrings.writeMessage,
                   border: InputBorder.none,
                 ),
               ),

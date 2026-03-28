@@ -5,6 +5,8 @@ import 'package:uts_cargo/data/models/auth_model/sign_in_model.dart';
 import 'package:uts_cargo/data/models/auth_model/sign_up_model.dart';
 import 'package:uts_cargo/domain/repositories/auth_repository.dart';
 
+import '../models/user_model/user_model.dart';
+
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remote;
 

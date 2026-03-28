@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/order_status_mapper.dart';
 import '../../../../data/models/order_model/order_model.dart';
@@ -18,17 +19,10 @@ class WOrderList extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Lottie.asset(
-              'assets/lottie/empty.json',
-              width: 200,
-              height: 200,
-            ),
-            const Text(
-              'Buyurtmalar topilmadi',
-              style: TextStyle(
-                color: AppColors.grayColor,
-                fontSize: 16,
-              ),
+            Lottie.asset('assets/lottie/empty.json', width: 200, height: 200),
+            Text(
+              AppStrings.ordersNotFound,
+              style: TextStyle(color: AppColors.grayColor, fontSize: 16),
             ),
           ],
         ),
@@ -51,7 +45,7 @@ class WOrderList extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
@@ -68,12 +62,9 @@ class WOrderList extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Trak kodi",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.grayColor,
-                ),
+              Text(
+                "${AppStrings.trackCode}: ",
+                style: TextStyle(fontSize: 12, color: AppColors.grayColor),
               ),
               const SizedBox(height: 4),
               Text(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 
 import '../../../core/svg/app_svg.dart';
@@ -14,7 +15,7 @@ class AboutPage extends StatelessWidget {
       backgroundColor: AppColors.screenColor,
       body: Column(
         children: [
-          SizedBox(height: 32.0),
+          SizedBox(height: 64.0),
           Row(
             children: [
               IconButton(
@@ -28,7 +29,7 @@ class AboutPage extends StatelessWidget {
                 ),
               ),
               Text(
-                "Biz haqimizda",
+                AppStrings.aboutUs,
                 style: TextStyle(
                   color: AppColors.blackColor,
                   fontSize: 20.0,
@@ -37,7 +38,6 @@ class AboutPage extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 16),
           Expanded(
             child: ListView(
               children: [
@@ -49,16 +49,14 @@ class AboutPage extends StatelessWidget {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       TextSpan(
-                        text:
-                            " — 2023 YILDA TASHKIL TOPGAN ZAMONAVIY VA ISHONCHLI LOGISTIKA KOMPANIYASI BO'LIB, ",
+                        text: AppStrings.utsDescription1,
                       ),
                       TextSpan(
                         text: "MCHJ SADIKO EXPRESS",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       TextSpan(
-                        text:
-                            """ NOMI OSTIDA FAOLIYAT YURITADI. KOMPANIYA XITOY VA TOSHKENT O'RTASIDA XALQARO YUK TASHISH HAMDA POCHTA XIZMATLARINI AMALGA OSHIRADI. BIZNING ASOSIY MAQSADIMIZ — MIJOZLARGA TEZKOR, XAVFSIZ VA SAMARALI LOGISTIKA YECHIMLARINI TAQDIM ETISH. ZAMONAVIY TRANSPORT TIZIMI, ANIQ REJALASHTIRILGAN LOGISTIKA JARAYONLARI VA TAJRIBALI JAMOA ORQALI HAR BIR YUK O'Z VAQTIDA VA BUT SAQLANGAN HOLDA MANZILGA YETKAZILADI.""",
+                        text: AppStrings.utsDescription2,
                       ),
                     ],
                   ),
@@ -71,7 +69,7 @@ class AboutPage extends StatelessWidget {
                 ).paddingSymmetric(horizontal: 16.0),
                 SizedBox(height: 32.0),
                 Text(
-                  "NEGA AYNAN UTS LOGISTIC?",
+                  AppStrings.whyUts,
                   style: TextStyle(
                     color: AppColors.blackColor,
                     fontSize: 16,
@@ -79,28 +77,27 @@ class AboutPage extends StatelessWidget {
                   ),
                 ).paddingSymmetric(horizontal: 16.0),
                 Text(
-                  "• ✅ TEZKOR VA BARQAROR YETKAZIB BERISH",
+                  AppStrings.benefit1,
                   style: TextStyle(color: AppColors.blackColor, fontSize: 14.0),
                 ).paddingSymmetric(horizontal: 16.0),
                 Text(
-                  "• ✅ YUK XAVFSIZLIGI VA DOIMIY MONITORING",
+                  AppStrings.benefit2,
                   style: TextStyle(color: AppColors.blackColor, fontSize: 14.0),
                 ).paddingSymmetric(horizontal: 16.0),
                 Text(
-                  "• ✅ QULAY VA RAQOBATBARDOSH NARXLAR",
+                  AppStrings.benefit3,
                   style: TextStyle(color: AppColors.blackColor, fontSize: 14.0),
                 ).paddingSymmetric(horizontal: 16.0),
                 Text(
-                  "• ✅ PROFESSIONAL XIZMAT KO'RSATISH",
+                  AppStrings.benefit4,
                   style: TextStyle(color: AppColors.blackColor, fontSize: 14.0),
                 ).paddingSymmetric(horizontal: 16.0),
                 Text(
-                  "• ✅ MIJOZLARGA INDIVIDUAL YONDASHUV",
+                  AppStrings.benefit5,
                   style: TextStyle(color: AppColors.blackColor, fontSize: 14.0),
                 ).paddingSymmetric(horizontal: 16.0),
                 SizedBox(height: 32.0),
-                Text(
-                  "BIZ HAR BIR MIJOZ BILAN UZOQ MUDDATLI HAMKORLIKNI YO'LGA QO'YISHNI MAQSAD QILGANMIZ. ISHONCH, ANIQLIK VA MAS'ULIYAT - KOMPANIYAMIZNING ASOSIY QADRIYATLARIDIR.",
+                Text(AppStrings.partnershipGoal,
                   textAlign: TextAlign.justify,
                   style: TextStyle(
                     height: 1.5,
@@ -109,8 +106,7 @@ class AboutPage extends StatelessWidget {
                   ),
                 ).paddingSymmetric(horizontal: 16.0),
                 SizedBox(height: 32.0),
-                Text(
-                  "XALQARO SAVDO JARAYONLARINI SODDALASHTIRISH VA MIJOZLARGA SIFATLI LOGISTIKA XIZMATLARINI TAQDIM ETISH ORQALI BIZNES RIVOJIGA HISSA QO'SHISH.",
+                Text(AppStrings.missionStatement,
                   textAlign: TextAlign.justify,
                   style: TextStyle(
                     height: 1.5,

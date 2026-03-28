@@ -3,13 +3,20 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
 import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
+import 'package:uts_cargo/data/models/info_model/info_model.dart';
 
 class WWarehouseBottomSheet extends StatelessWidget {
+  final InfoModel model;
   final String userId;
 
-  const WWarehouseBottomSheet({super.key, required this.userId});
+  const WWarehouseBottomSheet({
+    super.key,
+    required this.userId,
+    required this.model,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +61,7 @@ class WWarehouseBottomSheet extends StatelessWidget {
                     ),
                     SizedBox(width: 16.0),
                     Text(
-                      "Xitoy (AVIA)",
+                      "${AppStrings.china} (${AppStrings.avia})",
                       style: TextStyle(
                         color: AppColors.blackColor,
                         fontSize: 16.0,
@@ -67,7 +74,7 @@ class WWarehouseBottomSheet extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "Ombor manzili",
+                      AppStrings.warehouseAddress,
                       style: TextStyle(
                         color: AppColors.grayColor,
                         fontSize: 14.0,
@@ -78,7 +85,7 @@ class WWarehouseBottomSheet extends StatelessWidget {
                         Clipboard.setData(
                           ClipboardData(
                             text:
-                                "$userId 15214884676 浙江省金华市义乌市 苏溪镇东洪村50栋2单元一楼2号门 $userId",
+                                "收货人: UT-$userId\n电话: ${model.xitoyAvia.phone}\n安市: ${model.xitoyAvia.address} UT-$userId",
                           ),
                         );
                         context.showSnackBarMessage("Manzil nusxa olindi");
@@ -89,13 +96,13 @@ class WWarehouseBottomSheet extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  "$userId 15214884676 浙江省金华市义乌市 苏溪镇东洪村50栋2单元一楼2号门 $userId",
+                  "收货人: UT-$userId\n电话: ${model.xitoyAvia.phone}\n安市: ${model.xitoyAvia.address} UT-$userId",
                   style: TextStyle(color: AppColors.blackColor, fontSize: 16.0),
                 ).paddingOnly(right: 120.0),
               ],
             ),
           ),
-          SizedBox(height: 16.0,),
+          SizedBox(height: 16.0),
           Container(
             width: double.infinity,
             margin: EdgeInsets.symmetric(horizontal: 16.0),
@@ -116,7 +123,7 @@ class WWarehouseBottomSheet extends StatelessWidget {
                     ),
                     SizedBox(width: 16.0),
                     Text(
-                      "Xitoy (AVTO)",
+                      "${AppStrings.china} (${AppStrings.auto})",
                       style: TextStyle(
                         color: AppColors.blackColor,
                         fontSize: 16.0,
@@ -129,7 +136,7 @@ class WWarehouseBottomSheet extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "Ombor manzili",
+                      AppStrings.warehouseAddress,
                       style: TextStyle(
                         color: AppColors.grayColor,
                         fontSize: 14.0,
@@ -140,7 +147,7 @@ class WWarehouseBottomSheet extends StatelessWidget {
                         Clipboard.setData(
                           ClipboardData(
                             text:
-                            "$userId 15214884676 浙江省金华市义乌市 苏溪镇东洪村50栋2单元一楼2号门 $userId",
+                            "收货人: A-$userId\n电话: ${model.xitoyAvto.phone}\n安市: ${model.xitoyAvto.address} A-$userId",
                           ),
                         );
                         context.showSnackBarMessage("Manzil nusxa olindi");
@@ -151,13 +158,13 @@ class WWarehouseBottomSheet extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  "$userId 15214884676 浙江省金华市义乌市 苏溪镇东洪村50栋2单元一楼2号门 $userId",
+                  "收货人: A-$userId\n电话: ${model.xitoyAvto.phone}\n安市: ${model.xitoyAvto.address} A-$userId",
                   style: TextStyle(color: AppColors.blackColor, fontSize: 16.0),
                 ).paddingOnly(right: 120.0),
               ],
             ),
           ),
-          SizedBox(height: 24.0,)
+          SizedBox(height: 24.0),
         ],
       ),
     );

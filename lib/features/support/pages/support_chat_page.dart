@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 
@@ -64,8 +65,8 @@ class _SupportChatPageState extends State<SupportChatPage> {
     return Scaffold(
       backgroundColor: AppColors.screenColor,
       appBar: AppBar(
-        title: const Text(
-          "Yordam",
+        title: Text(
+          AppStrings.help,
           style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.blackColor),
         ),
         backgroundColor: AppColors.screenColor,

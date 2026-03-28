@@ -17,7 +17,7 @@ class VideoRemoteDataSource {
   Future<List<VideoModel>> getVideo() async {
     final token = await getToken();
     final apiClient = ApiClient(token: token);
-    final res = await apiClient.get("/api/cargo/videos/");
+    final res = await apiClient.get("/api/services/videos/");
 
     return (res as List).map((e) => VideoModel.fromJson(e)).toList();
   }

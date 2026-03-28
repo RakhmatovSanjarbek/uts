@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
 import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
+import 'package:uts_cargo/data/models/auth_model/sign_up_model.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/auth/widgets/w_date_picker_field.dart';
 import 'package:uts_cargo/features/auth/widgets/w_input_text.dart';
@@ -26,13 +28,27 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
   final tinNumber = TextEditingController();
   final serialNumber = TextEditingController();
   final dateNumber = TextEditingController();
+  final address = TextEditingController();
 
   bool get isFormValid {
-    return firstName.text.trim().length >= 3 &&
-        lastName.text.trim().length >= 3 &&
-        tinNumber.text.trim().length == 17 &&
-        serialNumber.text.trim().length == 10 &&
-        dateNumber.text.trim().length == 10;
+    return firstName.text
+        .trim()
+        .length >= 3 &&
+        lastName.text
+            .trim()
+            .length >= 3 &&
+        tinNumber.text
+            .trim()
+            .length == 17 &&
+        serialNumber.text
+            .trim()
+            .length == 10 &&
+        dateNumber.text
+            .trim()
+            .length == 10 &&
+        address.text
+            .trim()
+            .length >= 15;
   }
 
   void _updateState() {
@@ -58,16 +74,16 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
                     Navigator.pop(context);
                   },
                   child: Text(
-                    "Orqaga",
+                    AppStrings.back,
                     style: TextStyle(
                       color: AppColors.mainColor,
                       fontSize: 14.0,
-                      fontWeight: FontWeight.bold
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ).paddingOnly(left: 8.0),
                 Text(
-                  "Ma'lumotlarni kiriting",
+                  AppStrings.enterInfo,
                   style: TextStyle(
                     color: AppColors.blackColor,
                     fontSize: 20.0,
@@ -80,27 +96,30 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
             SizedBox(height: 8.0),
             WInputText(
               controller: firstName,
-              hintText: 'Ism',
+              hintText: AppStrings.firstName,
               onChanged: (_) => _updateState(),
             ),
             SizedBox(height: 8.0),
             WInputText(
               controller: lastName,
-              hintText: 'Familiya',
+              hintText: AppStrings.lastName,
               onChanged: (_) => _updateState(),
             ),
             SizedBox(height: 8),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                "Paspurt ma'lumotlarini kiriting",
-                style: TextStyle(
-                  color: AppColors.blackColor,
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            WInputText(
+              controller: address,
+              hintText: AppStrings.fullAddress,
+              onChanged: (_) => _updateState(),
             ),
+            SizedBox(height: 8.0),
+            Text(
+              AppStrings.enterPassportInfo,
+              style: TextStyle(
+                color: AppColors.blackColor,
+                fontSize: 20.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ).paddingSymmetric(horizontal: 16.0),
             SizedBox(height: 8),
             WTinNumber(controller: tinNumber, onChanged: (_) => _updateState()),
             SizedBox(height: 8),
@@ -120,7 +139,10 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16.0,
+            bottom: MediaQuery
+                .of(context)
+                .viewInsets
+                .bottom + 16.0,
           ),
           child: BlocConsumer<AuthBloc, AuthState>(
             listener: (context, state) {
@@ -138,18 +160,21 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
             builder: (context, state) {
               final isLoading = state is AuthLoading;
               return WLoadingButton(
-                title: "Ro'yxatdan o'tish",
+                title: AppStrings.registration,
                 isOnPressed: isFormValid,
                 isLoading: isLoading,
                 onPressed: () {
                   context.read<AuthBloc>().add(
                     SignUpEvent(
-                      widget.phoneNumber,
-                      firstName.text.trim(),
-                      lastName.text.trim(),
-                      _formatJshshir(tinNumber.text),
-                      _formatPassport(serialNumber.text),
-                      _formatBirthDate(dateNumber.text),
+                      SignUpModel(
+                          address: address.text.trim(),
+                          phone: widget.phoneNumber,
+                          firstName: firstName.text.trim(),
+                          lastName: lastName.text.trim(),
+                          jshshir: _formatJshshir(tinNumber.text),
+                          passportSeries: _formatPassport(serialNumber.text),
+                          birthDate: _formatBirthDate(dateNumber.text)
+                      )
                     ),
                   );
                 },

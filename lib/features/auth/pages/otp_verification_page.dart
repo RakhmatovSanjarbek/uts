@@ -6,6 +6,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:pinput/pinput.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
 import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/auth/widgets/w_loading_button.dart';
 
@@ -25,16 +26,14 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   final pinController = TextEditingController();
   final focusNode = FocusNode();
   bool isFull = false;
-
-  // Taymer uchun o'zgaruvchilar
   Timer? _timer;
-  int _start = 60; // 1 minut (60 soniya)
+  int _start = 60;
   bool _canResend = false;
 
   @override
   void initState() {
     super.initState();
-    startTimer(); // Sahifa ochilishi bilan taymerni boshlash
+    startTimer();
   }
 
   void startTimer() {
@@ -53,8 +52,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       }
     });
   }
-
-  // Soniya formatini 01:00 ko'rinishiga keltirish
   String get timerText {
     final minutes = (_start ~/ 60).toString().padLeft(2, '0');
     final seconds = (_start % 60).toString().padLeft(2, '0');
@@ -63,7 +60,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
   @override
   void dispose() {
-    _timer?.cancel(); // Xotirani bo'shatish
+    _timer?.cancel();
     pinController.dispose();
     focusNode.dispose();
     super.dispose();
@@ -80,9 +77,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         fontWeight: FontWeight.bold,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: AppColors.grayColor200),
       ),
     );
 
@@ -94,7 +91,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
     final submittedPinTheme = defaultPinTheme.copyWith(
       decoration: defaultPinTheme.decoration!.copyWith(
-        color: Colors.grey.shade50,
+        color: AppColors.grayColor200,
         border: Border.all(color: AppColors.mainColor),
       ),
     );
@@ -131,7 +128,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                       Navigator.pop(context);
                     },
                     child: Text(
-                      "Orqaga",
+                      AppStrings.back,
                       style: TextStyle(
                           color: AppColors.mainColor,
                           fontSize: 14.0,
@@ -139,8 +136,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                       ),
                     ),
                   ).paddingOnly(left: 8.0),
-                  const Text(
-                    "Tasdiqlash kodi",
+                  Text(
+                    AppStrings.verificationCode,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -152,8 +149,11 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
               ),
               const SizedBox(height: 12),
               Text(
-                "Sizning ${widget.phoneNumber} raqamingizga 6 xonali kod sms qilib yuborildi",
-                style: TextStyle(color: AppColors.blackColor50, fontSize: 16),
+                AppStrings.smsSentInfo(widget.phoneNumber),
+                style: TextStyle(
+                  color: AppColors.blackColor50,
+                  fontSize: 16,
+                ),
               ).paddingSymmetric(horizontal: 16.0),
               const SizedBox(height: 24.0),
 
@@ -177,7 +177,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Kod kelmadimi? ",
+                      AppStrings.codeNotReceived,
                       style: TextStyle(
                         color: AppColors.blackColor,
                         fontSize: 16.0,
@@ -191,11 +191,11 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                                   }
                                 : null,
                             child: Text(
-                              "Qayta yuborish",
+                              AppStrings.resend,
                               style: TextStyle(
                                 color: _canResend
                                     ? AppColors.mainColor
-                                    : Colors.grey,
+                                    : AppColors.grayColor,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16.0,
                               ),
@@ -216,7 +216,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
               const Spacer(),
               SafeArea(
                 child: WLoadingButton(
-                  title: "Tasdiqlash",
+                  title: AppStrings.confirm,
                   isOnPressed: isFull,
                   isLoading: isLoading,
                   onPressed: () {
