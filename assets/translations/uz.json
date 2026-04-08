@@ -3,6 +3,8 @@
   "order": "Buyurtma",
   "language": "O'zbek",
   "select_lang": "Tilni tanlang",
+  "app_language": "Ilova tili",
+  "app_version": "Ilova versiyasi",
   "back": "Orqaga",
   "enter_info": "Ma'lumotlarni kiriting",
   "first_name": "Ism",
@@ -114,5 +116,11 @@
   "date_label": "Sana:",
   "no_data_yet": "Hozircha ma'lumot yo'q",
   "submit": "Yuborish",
-  "kg": "kg"
+  "kg": "kg",
+  "card_copied": "Karta raqami nusxalandi",
+  "receipt_sent": "Chek muvaffaqiyatli yuborildi!",
+  "address_saved": "Manzil muvaffaqiyatli saqlandi!",
+  "pickup_point": "Punktda olib ketish",
+  "via_post": "Pochta orqali",
+  "via_taxi": "Taksi orqali"
 }

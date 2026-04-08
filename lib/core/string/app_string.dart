@@ -5,6 +5,8 @@ class AppStrings {
   static String get order => "order".tr();
   static String get selectLang => "select_lang".tr();
   static String get language => "language".tr();
+  static String get appLanguage => "app_language".tr();
+  static String get appVersion => "app_version".tr();
   static String get back => "back".tr();
   static String get enterInfo => "enter_info".tr();
   static String get firstName => "first_name".tr();
@@ -117,4 +119,10 @@ class AppStrings {
   static String get noDataYet => "no_data_yet".tr();
   static String get submit => "submit".tr();
   static String get kg => "kg".tr();
+  static String get cardCopied => "card_copied".tr();
+  static String get receiptSent => "receipt_sent".tr();
+  static String get addressSaved => "address_saved".tr();
+  static String get pickupPoint => "pickup_point".tr();
+  static String get viaPost => "via_post".tr();
+  static String get viaTaxi => "via_taxi".tr();
 }

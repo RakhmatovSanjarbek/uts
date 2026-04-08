@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:uts_cargo/core/extensions/padding_extensions.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/features/home/widgets/w_action_button.dart';
@@ -137,8 +136,8 @@ class WBasicManagement extends StatelessWidget {
                 onTap: onVideoPressed,
                 child: Container(
                   width: MediaQuery.sizeOf(context).width * 0.44,
-                  height: 140.0,
-                  padding: EdgeInsets.all(8.0),
+                  constraints: const BoxConstraints(minHeight: 140), // Balandlikni dinamik ushlab turish uchun
+                  padding: const EdgeInsets.all(12.0),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topRight,
@@ -150,7 +149,7 @@ class WBasicManagement extends StatelessWidget {
                       BoxShadow(
                         color: Colors.black.withOpacity(0.15),
                         blurRadius: 8,
-                        offset: Offset(0, 4),
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
@@ -158,67 +157,51 @@ class WBasicManagement extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
-                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: 40.0,
-                            height: 40.0,
-                            padding: EdgeInsets.all(6.0),
+                            width: 36.0,
+                            height: 36.0,
+                            padding: const EdgeInsets.all(6.0),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20.0),
+                              shape: BoxShape.circle, // BorderRadius o'rniga shape qulayroq
                               border: Border.all(
                                 color: AppColors.whiteColor,
-                                width: 2.0,
+                                width: 1.5,
                               ),
                             ),
                             child: SvgPicture.asset(
                               AppSvg.icVideo,
-                              colorFilter: ColorFilter.mode(
+                              colorFilter: const ColorFilter.mode(
                                 AppColors.whiteColor,
                                 BlendMode.srcIn,
                               ),
                             ),
                           ),
-                          SizedBox(width: 8.0),
+                          const SizedBox(width: 8.0),
                           Expanded(
                             child: Text(
                               AppStrings.videoTutorials,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: AppColors.whiteColor,
-                                fontSize: 14.0,
+                                fontSize: 13.0,
+                                fontWeight: FontWeight.w600,
                               ),
                               maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
-                      ).paddingOnly(left: 8.0, right: 8.0, top: 8.0),
+                      ),
+                      const SizedBox(height: 12.0), // Bo'sh joy qo'shdik
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround, // Rasmlarni markazroqqa yig'ish
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8.0),
-                            child: Image.asset(
-                              "assets/images/pinduoduo_logo.png",
-                              width: MediaQuery.of(context).size.width * 0.12,
-                            ),
-                          ),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8.0),
-                            child: Image.asset(
-                              "assets/images/taobao_logo.png",
-                              width: MediaQuery.of(context).size.width * 0.12,
-                            ),
-                          ),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8.0),
-                            child: Image.asset(
-                              "assets/images/alibaba_logo.png",
-                              width: MediaQuery.of(context).size.width * 0.12,
-                            ),
-                          ),
+                          _buildBrandLogo(context, "assets/images/pinduoduo_logo.png"),
+                          _buildBrandLogo(context, "assets/images/taobao_logo.png"),
+                          _buildBrandLogo(context, "assets/images/alibaba_logo.png"),
                         ],
-                      ).paddingOnly(bottom: 8.0),
+                      ),
                     ],
                   ),
                 ),
@@ -255,6 +238,19 @@ class WBasicManagement extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBrandLogo(BuildContext context, String assetPath) {
+    double size = MediaQuery.sizeOf(context).width * 0.09; // O'lchamni optimallashtirdik
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8.0), // To'liq doira bo'lishi uchun
+      child: Image.asset(
+        assetPath,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
       ),
     );
   }

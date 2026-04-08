@@ -3,6 +3,8 @@
   "order": "Заказ",
   "language": "Русский",
   "select_lang": "Выберите язык",
+  "app_language": "Язык приложения",
+  "app_version": "Версия приложения",
   "back": "Назад",
   "enter_info": "Введите данные",
   "first_name": "Имя",
@@ -94,7 +96,7 @@
   "id": "ID",
   "additional_passport": "Дополнительный паспорт",
   "about_app": "О приложении",
-  "privacy_policy": "Политика конфиденциальности",
+  "privacy_policy": "Конфиденциальность",
   "delete_account_confirm_title": "Удалить аккаунт?",
   "delete_account_confirm_message": "Вы действительно хотите удалить свой аккаунт? Это действие нельзя будет отменить.",
   "cancel": "Отмена",
@@ -114,5 +116,11 @@
   "date_label": "Дата:",
   "no_data_yet": "Пока нет данных",
   "submit": "Отправить",
-  "kg": "кг"
+  "kg": "кг",
+  "card_copied": "Номер карты скопирован",
+  "receipt_sent": "Чек успешно отправлен!",
+  "address_saved": "Адрес успешно сохранен!",
+  "pickup_point": "Самовывоз из пункта",
+  "via_post": "Через почту",
+  "via_taxi": "Через такси"
 }

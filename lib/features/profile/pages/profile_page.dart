@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +16,7 @@ import 'package:uts_cargo/features/profile/widgets/w_edit_profile_bottom_sheet.d
 import 'package:uts_cargo/features/profile/widgets/w_user_info.dart';
 
 import '../../../core/utils/map_service.dart';
+import '../../auth/pages/policy_web_view.dart';
 import '../widgets/w_language_bottom_sheet.dart';
 import '../widgets/w_qrcode_bottom_sheet.dart';
 
@@ -81,7 +81,6 @@ class _ProfilePageState extends State<ProfilePage> {
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 56.0),
                   _buildHeader(context, userModel),
@@ -91,10 +90,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       isLoading: state is ProfileLoading,
                       model: userModel,
                       onPressed: () {
-                        Clipboard.setData(ClipboardData(text: userModel!.userId));
+                        Clipboard.setData(
+                          ClipboardData(text: userModel!.userId),
+                        );
                         context.showSnackBarMessage(AppStrings.idCopied);
                       },
-                      onPressedEditButton: () => _showEditBottomSheet(context, userModel!),
+                      onPressedEditButton: () =>
+                          _showEditBottomSheet(context, userModel!),
                     )
                   else
                     SizedBox(
@@ -108,7 +110,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     onPressed: () async {
                       await Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const RelativesPage()),
+                        MaterialPageRoute(
+                          builder: (_) => const RelativesPage(),
+                        ),
                       );
                       if (mounted) _refreshProfile();
                     },
@@ -124,7 +128,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 16.0),
                   WActionButton(
                     svgPath: AppSvg.icLanguage,
-                    buttonName: "${AppStrings.language} (${_getLangName(context)})",
+                    buttonName:
+                        "${AppStrings.appLanguage} (${AppStrings.language})",
                     onPressed: () => _showLanguageBottomSheet(context),
                   ),
                   const SizedBox(height: 16.0),
@@ -137,7 +142,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   WActionButton(
                     svgPath: AppSvg.icWarning,
                     buttonName: AppStrings.privacyPolicy,
-                    onPressed: () {},
+                    onPressed: () => openPolicy(
+                      context,
+                      AppStrings.privacyPolicy,
+                      "https://utsgroup.uz/privacy",
+                    ),
                   ),
                   const SizedBox(height: 16.0),
                   WActionButton(
@@ -147,7 +156,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     txtColor: AppColors.redColor,
                     onPressed: () => _showDeleteAccountDialog(context),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 16.0),
+                  Text(
+                    "${AppStrings.appVersion} 1.0.0+1",
+                    style: TextStyle(
+                      color: AppColors.blackColor,
+                      fontSize: 12.0,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -163,7 +180,11 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         Text(
           AppStrings.profile,
-          style: const TextStyle(color: AppColors.blackColor, fontSize: 28.0, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: AppColors.blackColor,
+            fontSize: 28.0,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         IconButton(
           onPressed: () {
@@ -173,25 +194,31 @@ class _ProfilePageState extends State<ProfilePage> {
           },
           icon: SvgPicture.asset(
             AppSvg.icQrCod,
-            colorFilter: const ColorFilter.mode(AppColors.mainColor, BlendMode.srcIn),
+            colorFilter: const ColorFilter.mode(
+              AppColors.mainColor,
+              BlendMode.srcIn,
+            ),
           ),
         ),
       ],
     ).paddingOnly(left: 16.0);
   }
 
-  String _getLangName(BuildContext context) {
-    final locale = context.locale.toString();
-    if (locale.contains('uz')) return "O'zbek";
-    if (locale.contains('ru')) return "Русский";
-    return "o'zbek";
+  void openPolicy(BuildContext context, String title, String url) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => PolicyWebView(title: title, url: url),
+      ),
+    );
   }
 
   void _navigateToLogin(BuildContext context) {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const SignInPage()),
-          (route) => false,
+      (route) => false,
     );
   }
 
@@ -208,7 +235,8 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => WEditProfileBottomSheet(user: user, onUpdated: _refreshProfile),
+      builder: (context) =>
+          WEditProfileBottomSheet(user: user, onUpdated: _refreshProfile),
     );
   }
 
@@ -230,9 +258,16 @@ class _ProfilePageState extends State<ProfilePage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppStrings.deleteAccountConfirmTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(
+              AppStrings.deleteAccountConfirmTitle,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 12),
-            Text(AppStrings.deleteAccountConfirmMessage, textAlign: TextAlign.start, style: const TextStyle(color: AppColors.grayColor)),
+            Text(
+              AppStrings.deleteAccountConfirmMessage,
+              textAlign: TextAlign.start,
+              style: const TextStyle(color: AppColors.grayColor),
+            ),
           ],
         ),
         actions: [
@@ -242,10 +277,19 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: TextButton(
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: AppColors.grayColor200)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: AppColors.grayColor200),
+                    ),
                   ),
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: Text(AppStrings.cancel, style: const TextStyle(color: AppColors.grayColor, fontWeight: FontWeight.w600)),
+                  child: Text(
+                    AppStrings.cancel,
+                    style: const TextStyle(
+                      color: AppColors.grayColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -257,15 +301,34 @@ class _ProfilePageState extends State<ProfilePage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.redColor,
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      onPressed: isLoading ? null : () {
-                        context.read<ProfileBloc>().add(DeleteAccountEvent());
-                        Navigator.pop(dialogContext);
-                      },
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              context.read<ProfileBloc>().add(
+                                DeleteAccountEvent(),
+                              );
+                              Navigator.pop(dialogContext);
+                            },
                       child: isLoading
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: AppColors.whiteColor, strokeWidth: 2))
-                          : Text(AppStrings.delete, style: const TextStyle(color: AppColors.whiteColor, fontWeight: FontWeight.bold)),
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: AppColors.whiteColor,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              AppStrings.delete,
+                              style: const TextStyle(
+                                color: AppColors.whiteColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     );
                   },
                 ),

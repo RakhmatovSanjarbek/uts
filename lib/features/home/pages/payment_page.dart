@@ -1,10 +1,14 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:uts_cargo/core/extensions/padding_extensions.dart';
+import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
+
 import '../../../data/models/warehouse/arrived_group_response.dart';
 import '../bloc/warehouse_bloc.dart';
 
@@ -18,21 +22,16 @@ class PaymentUploadPage extends StatefulWidget {
 
 class _PaymentUploadPageState extends State<PaymentUploadPage> {
   File? _imageFile;
-  final String _cardNumber = "8600 5000 1122 3344";
+  final String _cardNumber = "5614 6821 1869 1734";
 
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) setState(() => _imageFile = File(picked.path));
   }
 
-  void _copyCard() {
+  void _copyCard(BuildContext context) {
     Clipboard.setData(ClipboardData(text: _cardNumber.replaceAll(' ', '')));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Karta raqami nusxalandi"),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    context.showSnackBarMessage(AppStrings.cardCopied);
   }
 
   @override
@@ -40,20 +39,17 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
     return BlocConsumer<WarehouseBloc, WarehouseState>(
       listener: (context, state) {
         if (state is WarehouseLoaded) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Chek muvaffaqiyatli yuborildi!")),
-          );
+          context.showSnackBarMessage(AppStrings.receiptSent);
           Navigator.pop(context);
         } else if (state is WarehouseError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-          );
+          context.showSnackBarMessage(state.message);
         }
       },
       builder: (context, state) {
         final bool isLoading = state is WarehouseLoading;
 
         return Scaffold(
+          backgroundColor: AppColors.screenColor,
           appBar: AppBar(title: Text(AppStrings.payment)),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -76,33 +72,30 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
               ],
             ),
           ),
-          bottomNavigationBar: Padding(
-            padding: const EdgeInsets.all(20),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.mainColor,
-                minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: (_imageFile == null || isLoading)
-                  ? null
-                  : () {
-                context.read<WarehouseBloc>().add(
-                  UploadCheckEvent(widget.group.id, [_imageFile!.path]),
-                );
-              },
-              child: isLoading
-                  ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(color: AppColors.whiteColor, strokeWidth: 2),
-              )
-                  : Text(
-                AppStrings.confirm,
-                style: TextStyle(color: AppColors.whiteColor, fontWeight: FontWeight.bold),
-              ),
+          bottomNavigationBar: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.mainColor,
+              minimumSize: const Size(double.infinity, 55),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-          ),
+            onPressed: (_imageFile == null || isLoading)
+                ? null
+                : () {
+              context.read<WarehouseBloc>().add(
+                UploadCheckEvent(widget.group.id, [_imageFile!.path]),
+              );
+            },
+            child: isLoading
+                ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(color: AppColors.whiteColor, strokeWidth: 2),
+            )
+                : Text(
+              AppStrings.confirm,
+              style: TextStyle(color: AppColors.whiteColor, fontWeight: FontWeight.bold),
+            ),
+          ).paddingOnly(right: 16.0, left: 16.0, bottom: 24.0),
         );
       },
     );
@@ -123,7 +116,7 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
             children: [
               Text(AppStrings.paymentCard, style: TextStyle(color: AppColors.whiteColor)),
               IconButton(
-                onPressed: _copyCard,
+                onPressed: () => _copyCard(context),
                 icon: const Icon(Icons.copy, color: AppColors.whiteColor, size: 20),
               ),
             ],
@@ -137,7 +130,7 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
                 letterSpacing: 2,
               )),
           const SizedBox(height: 15),
-          Text("UTS CARGO LOGISTICS", style: TextStyle(color: AppColors.whiteColor, fontSize: 14)),
+          Text("Akmal Farhodov", style: TextStyle(color: AppColors.whiteColor, fontSize: 14)),
         ],
       ),
     );

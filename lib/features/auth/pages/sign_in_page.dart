@@ -6,6 +6,7 @@ import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
+import 'package:uts_cargo/features/auth/pages/policy_web_view.dart';
 import 'package:uts_cargo/features/auth/widgets/w_loading_button.dart';
 import 'package:uts_cargo/features/auth/widgets/w_phone_number.dart';
 
@@ -23,6 +24,13 @@ class _SignInPageState extends State<SignInPage> {
 
   bool isOnPressed = false;
   bool isChecked = false;
+
+  void _validateForm() {
+    setState(() {
+      final cleanPhone = phoneNumber.text.replaceAll(RegExp(r'[^0-9]'), '');
+      isOnPressed = cleanPhone.length == 9 && isChecked;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,11 +82,11 @@ class _SignInPageState extends State<SignInPage> {
                                   fontSize: 16.0,
                                 ),
                               ),
-                              SizedBox(width: 8.0,),
+                              SizedBox(width: 8.0),
                               CircleAvatar(
                                 radius: 16.0,
                                 backgroundImage: _getLangImage(context),
-                              )
+                              ),
                             ],
                           ),
                         ).paddingOnly(right: 16.0),
@@ -104,9 +112,7 @@ class _SignInPageState extends State<SignInPage> {
                   WPhoneNumber(
                     phoneNumber: phoneNumber,
                     onChanged: (value) {
-                      setState(() {
-                        isOnPressed = value.length == 12;
-                      });
+                      _validateForm();
                     },
                   ),
                 ],
@@ -134,6 +140,7 @@ class _SignInPageState extends State<SignInPage> {
                               value: isChecked,
                               onChanged: (value) {
                                 setState(() => isChecked = value!);
+                                _validateForm();
                               },
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(6),
@@ -157,7 +164,9 @@ class _SignInPageState extends State<SignInPage> {
                           ],
                         ),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            openPolicy(context, AppStrings.usageTerms, "https://utsgroup.uz/terms");
+                          },
                           child: Text(
                             AppStrings.usageTerms,
                             style: TextStyle(
@@ -174,6 +183,16 @@ class _SignInPageState extends State<SignInPage> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  void openPolicy(BuildContext context, String title, String url) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => PolicyWebView(title: title, url: url),
       ),
     );
   }

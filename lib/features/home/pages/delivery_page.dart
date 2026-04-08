@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uts_cargo/core/extensions/padding_extensions.dart';
+import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -7,6 +9,7 @@ import '../bloc/warehouse_bloc.dart';
 
 class DeliverySelectionPage extends StatefulWidget {
   final int groupId;
+
   const DeliverySelectionPage({super.key, required this.groupId});
 
   @override
@@ -20,30 +23,29 @@ class _DeliverySelectionPageState extends State<DeliverySelectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.screenColor,
       appBar: AppBar(title: Text(AppStrings.delivery)),
       body: BlocConsumer<WarehouseBloc, WarehouseState>(
         listener: (context, state) {
           if (state is WarehouseLoaded) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Manzil muvaffaqiyatli saqlandi!")),
-            );
+            context.showSnackBarMessage(AppStrings.addressSaved);
             Navigator.pop(context);
           } else if (state is WarehouseError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-            );
+            context.showSnackBarMessage(state.message);
           }
         },
         builder: (context, state) {
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              Text(AppStrings.selectDeliveryMethod,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                AppStrings.selectDeliveryMethod,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 16),
-              _methodTile('Punktda', 'Punktda olib ketish', Icons.storefront),
-              _methodTile('Pochta', 'Pochta orqali', Icons.local_post_office),
-              _methodTile('Taksi', 'Taksi orqali', Icons.local_taxi),
+              _methodTile('Punktda', AppStrings.pickupPoint, Icons.storefront),
+              _methodTile('Pochta', AppStrings.viaPost, Icons.local_post_office),
+              _methodTile('Taksi', AppStrings.viaTaxi, Icons.local_taxi),
 
               if (_selectedMethod != 'Punktda') ...[
                 const SizedBox(height: 24),
@@ -51,14 +53,19 @@ class _DeliverySelectionPageState extends State<DeliverySelectionPage> {
                   controller: _addressController,
                   enabled: state is! WarehouseLoading,
                   decoration: InputDecoration(
-                    labelText: "To'liq manzil",
+                    labelText: AppStrings.fullAddress,
                     hintText: AppStrings.fullAddressHint,
                     border: OutlineInputBorder(),
                   ),
                 ),
               ],
               if (state is WarehouseLoading)
-                const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator())),
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
             ],
           );
         },
@@ -68,30 +75,45 @@ class _DeliverySelectionPageState extends State<DeliverySelectionPage> {
   }
 
   Widget _buildSaveButton() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: BlocBuilder<WarehouseBloc, WarehouseState>(
-        builder: (context, state) {
-          bool isLoading = state is WarehouseLoading;
-          return ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.mainColor,
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return BlocBuilder<WarehouseBloc, WarehouseState>(
+      builder: (context, state) {
+        bool isLoading = state is WarehouseLoading;
+        return ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.mainColor,
+            minimumSize: const Size(double.infinity, 56),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            onPressed: isLoading ? null : () {
-              context.read<WarehouseBloc>().add(SetDeliveryEvent(
-                widget.groupId,
-                _selectedMethod,
-                _selectedMethod == 'Punktda' ? null : _addressController.text,
-              ));
-            },
-            child: isLoading
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : Text(AppStrings.save, style: TextStyle(color: Colors.white)),
-          );
-        },
-      ),
+          ),
+          onPressed: isLoading
+              ? null
+              : () {
+                  context.read<WarehouseBloc>().add(
+                    SetDeliveryEvent(
+                      widget.groupId,
+                      _selectedMethod,
+                      _selectedMethod == 'Punktda'
+                          ? null
+                          : _addressController.text,
+                    ),
+                  );
+                },
+          child: isLoading
+              ? SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: AppColors.whiteColor,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Text(
+                  AppStrings.save,
+                  style: TextStyle(color: AppColors.whiteColor, fontWeight: FontWeight.bold, fontSize: 18.0),
+                ),
+        ).paddingOnly(left: 16.0, right: 16.0, bottom: 24.0);
+      },
     );
   }
 
@@ -101,7 +123,7 @@ class _DeliverySelectionPageState extends State<DeliverySelectionPage> {
       groupValue: _selectedMethod,
       onChanged: (v) => setState(() => _selectedMethod = v.toString()),
       title: Text(title),
-      secondary: Icon(icon),
+      secondary: Icon(icon, color: AppColors.mainColor,),
       contentPadding: EdgeInsets.zero,
     );
   }

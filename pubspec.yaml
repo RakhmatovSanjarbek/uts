@@ -51,6 +51,7 @@ dependencies:
   pretty_qr_code: ^3.6.0
   dartz: ^0.10.1
   map_launcher: ^3.1.0
+  flutter_inappwebview: ^6.1.5
 
 dev_dependencies:
   flutter_test:
