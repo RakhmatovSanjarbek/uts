@@ -1,3 +1,5 @@
+import 'dart:io';
+
 class SignUpModel {
   final String phone;
   final String firstName;
@@ -6,10 +8,8 @@ class SignUpModel {
   final String passportSeries;
   final String birthDate;
   final String address;
-  final String? relativeFullName;
-  final String? relativeJshshir;
-  final String? relativePassportSeries;
-  final String? relativePhone;
+  final File? passportFront;
+  final File? passportBack;
 
   SignUpModel({
     required this.address,
@@ -19,10 +19,8 @@ class SignUpModel {
     required this.jshshir,
     required this.passportSeries,
     required this.birthDate,
-    this.relativeFullName,
-    this.relativeJshshir,
-    this.relativePassportSeries,
-    this.relativePhone,
+    this.passportFront,
+    this.passportBack,
   });
 
   Map<String, dynamic> toJson() => {
@@ -33,9 +31,17 @@ class SignUpModel {
     "passport_series": passportSeries,
     "birth_date": birthDate,
     "address": address,
-    "relative_full_name": relativeFullName,
-    "relative_jshshir": relativeJshshir,
-    "relative_passport_series": relativePassportSeries,
-    "relative_phone": relativePhone,
   };
+
+  Future<Map<String, dynamic>> toMap() async {
+    return {
+      "phone": phone,
+      "first_name": firstName,
+      "last_name": lastName,
+      "jshshir": jshshir,
+      "passport_series": passportSeries,
+      "birth_date": birthDate,
+      "address": address,
+    };
+  }
 }

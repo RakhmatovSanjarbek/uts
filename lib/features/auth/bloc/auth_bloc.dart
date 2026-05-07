@@ -40,17 +40,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignUpEvent>((event, emit) async {
       emit(AuthLoading());
       try {
-        final res = await repository.signUp(
-          SignUpModel(
-            phone: event.model.phone,
-            firstName: event.model.firstName,
-            lastName: event.model.lastName,
-            jshshir: event.model.jshshir,
-            passportSeries: event.model.passportSeries,
-            birthDate: event.model.birthDate,
-            address: event.model.address,
-          ),
-        );
+        final res = await repository.signUp(event.model);
         emit(AuthSuccess(res));
       } catch (e) {
         emit(AuthFailure(_mapErrorToMessage(e)));

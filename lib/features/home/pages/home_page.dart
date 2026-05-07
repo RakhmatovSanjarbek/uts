@@ -28,7 +28,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   InfoModel? _cachedInfo;
   String? _userId;
-  // Ma'lumotlarni keshda saqlash uchun o'zgaruvchi
   dynamic _lastWarehouseData;
 
   @override

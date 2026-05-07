@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
 import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
@@ -12,6 +15,7 @@ import 'package:uts_cargo/features/auth/widgets/w_serial_number.dart';
 import 'package:uts_cargo/features/auth/widgets/w_tin_number.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../widgets/w_image_picker.dart';
 
 class EnterFullInfoPage extends StatefulWidget {
   final String phoneNumber;
@@ -31,24 +35,14 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
   final address = TextEditingController();
 
   bool get isFormValid {
-    return firstName.text
-        .trim()
-        .length >= 3 &&
-        lastName.text
-            .trim()
-            .length >= 3 &&
-        tinNumber.text
-            .trim()
-            .length == 17 &&
-        serialNumber.text
-            .trim()
-            .length == 10 &&
-        dateNumber.text
-            .trim()
-            .length == 10 &&
-        address.text
-            .trim()
-            .length >= 15;
+    return firstName.text.trim().length >= 3 &&
+        lastName.text.trim().length >= 3 &&
+        tinNumber.text.trim().length == 17 &&
+        serialNumber.text.trim().length == 10 &&
+        dateNumber.text.trim().length == 10 &&
+        address.text.trim().length >= 15 &&
+        passportFront != null &&
+        passportBack != null;
   }
 
   void _updateState() {
@@ -133,16 +127,42 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
               onChanged: (_) => _updateState(),
             ),
             SizedBox(height: 20.0),
+            Text(
+              "Passport nusxasini yuklang",
+              // AppStrings ga qo'shib qo'ysangiz ham bo'ladi
+              style: TextStyle(
+                color: AppColors.blackColor,
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ).paddingSymmetric(horizontal: 16.0),
+            const SizedBox(height: 12.0),
+            Row(
+              children: [
+                Expanded(
+                  child: WImagePicker(
+                    title: "Old tomoni",
+                    image: passportFront,
+                    onTap: () => _pickImage(true),
+                  ),
+                ),
+                Expanded(
+                  child: WImagePicker(
+                    title: "Orqa tomoni",
+                    image: passportBack,
+                    onTap: () => _pickImage(false),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20.0),
           ],
         ),
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: EdgeInsets.only(
-            bottom: MediaQuery
-                .of(context)
-                .viewInsets
-                .bottom + 16.0,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16.0,
           ),
           child: BlocConsumer<AuthBloc, AuthState>(
             listener: (context, state) {
@@ -167,14 +187,16 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
                   context.read<AuthBloc>().add(
                     SignUpEvent(
                       SignUpModel(
-                          address: address.text.trim(),
-                          phone: widget.phoneNumber,
-                          firstName: firstName.text.trim(),
-                          lastName: lastName.text.trim(),
-                          jshshir: _formatJshshir(tinNumber.text),
-                          passportSeries: _formatPassport(serialNumber.text),
-                          birthDate: _formatBirthDate(dateNumber.text)
-                      )
+                        address: address.text.trim(),
+                        phone: widget.phoneNumber,
+                        firstName: firstName.text.trim(),
+                        lastName: lastName.text.trim(),
+                        jshshir: _formatJshshir(tinNumber.text),
+                        passportSeries: _formatPassport(serialNumber.text),
+                        birthDate: _formatBirthDate(dateNumber.text),
+                        passportBack: passportBack,
+                        passportFront: passportFront,
+                      ),
                     ),
                   );
                 },
@@ -203,5 +225,24 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
     final year = parts[2];
 
     return '$year-$month-$day';
+  }
+
+  File? passportFront;
+  File? passportBack;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage(bool isFront) async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        if (isFront) {
+          passportFront = File(pickedFile.path);
+        } else {
+          passportBack = File(pickedFile.path);
+        }
+      });
+    }
   }
 }

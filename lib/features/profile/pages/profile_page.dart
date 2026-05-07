@@ -60,21 +60,21 @@ class _ProfilePageState extends State<ProfilePage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state is ProfileFailure && userModel == null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(state.error, textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _refreshProfile,
-                    child: Text(AppStrings.retry),
-                  ),
-                ],
-              ),
-            );
-          }
+          // if (state is ProfileFailure && userModel == null) {
+          //   return Center(
+          //     child: Column(
+          //       mainAxisAlignment: MainAxisAlignment.center,
+          //       children: [
+          //         Text(state.error, textAlign: TextAlign.center),
+          //         const SizedBox(height: 16),
+          //         ElevatedButton(
+          //           onPressed: _refreshProfile,
+          //           child: Text(AppStrings.retry),
+          //         ),
+          //       ],
+          //     ),
+          //   );
+          // }
 
           return RefreshIndicator(
             onRefresh: _refreshProfile,
@@ -147,6 +147,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       AppStrings.privacyPolicy,
                       "https://utsgroup.uz/privacy",
                     ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  WActionButton(
+                    svgPath: AppSvg.icLogout,
+                    buttonName: "Hisobdan chiqish",
+                    iconColor: AppColors.mainColor,
+                    txtColor: AppColors.blackColor,
+                    onPressed: () => _showDeleteAccountDialog(context),
                   ),
                   const SizedBox(height: 16.0),
                   WActionButton(

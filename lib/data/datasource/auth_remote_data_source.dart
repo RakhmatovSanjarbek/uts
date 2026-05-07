@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uts_cargo/core/network/api_client.dart';
 import 'package:uts_cargo/data/models/auth_model/auth_response.dart';
@@ -19,7 +20,43 @@ class AuthRemoteDataSource {
   }
 
   Future<AuthResponse> signUp(SignUpModel model) async {
-    final res = await client.post("/api/auth/signup/", body: model.toJson());
+    // 1. Hamma tekstli ma'lumotlarni Map-ga solamiz
+    final Map<String, dynamic> body = {
+      "phone": model.phone,
+      "first_name": model.firstName,
+      "last_name": model.lastName,
+      "jshshir": model.jshshir,
+      "passport_series": model.passportSeries,
+      "birth_date": model.birthDate,
+      "address": model.address,
+    };
+
+    // 2. Rasmlarni qo'shamiz (Agar null bo'lmasa)
+    if (model.passportFront != null) {
+      body["passport_front"] = await MultipartFile.fromFile(
+        model.passportFront!.path,
+        // filename berish ba'zi serverlarda majburiy, busiz rasm bormaydi
+        filename: model.passportFront!.path.split('/').last,
+      );
+    }
+
+    if (model.passportBack != null) {
+      body["passport_back"] = await MultipartFile.fromFile(
+        model.passportBack!.path,
+        filename: model.passportBack!.path.split('/').last,
+      );
+    }
+
+    // 3. Map-ni FormData-ga o'tkazamiz
+    final formData = FormData.fromMap(body);
+
+    // 5. So'rovni yuboramiz
+    final res = await client.post(
+      "/api/auth/signup/",
+      body: formData,
+      isMultipart: true,
+    );
+
     return AuthResponse.fromJson(res);
   }
 
