@@ -211,7 +211,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 16.0),
 
                   Text(
-                    "${AppStrings.appVersion} 1.0.0+1",
+                    "${AppStrings.appVersion} 1.0.2",
                     style: TextStyle(
                       color: AppColors.blackColor,
                       fontSize: 12.0,

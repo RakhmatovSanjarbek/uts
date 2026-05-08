@@ -10,6 +10,7 @@ import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 
+import '../../../data/models/user_model/user_model.dart';
 import '../bloc/chat_bloc.dart';
 import '../widgets/w_date_divider.dart';
 import '../widgets/w_message_bubble.dart';
@@ -26,6 +27,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
+  UserModel? _userModel;
 
   @override
   void initState() {
@@ -36,7 +38,10 @@ class _SupportChatPageState extends State<SupportChatPage> {
   void _checkAndLoadChat() {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthenticatedState) {
+      _userModel = authState.user;
       context.read<ChatBloc>().add(GetChatsEvent());
+    } else if (authState is RejectedState) {
+      _userModel = authState.user;
     }
   }
 
@@ -101,6 +106,10 @@ class _SupportChatPageState extends State<SupportChatPage> {
           final bool isRejected = authState is RejectedState;
           final bool isUnauthenticated = authState is UnauthenticatedState;
 
+          if (isRejected && authState is RejectedState) {
+            _userModel = authState.user;
+          }
+
           if (!isAuthenticated) {
             return _buildUnavailableScreen(isPending, isRejected, isUnauthenticated);
           }
@@ -116,7 +125,11 @@ class _SupportChatPageState extends State<SupportChatPage> {
     String buttonText = "";
     VoidCallback? onPressed;
 
-    if (isPending) {
+    if (isUnauthenticated) {
+      message = "Chat xizmatidan foydalanish uchun ro'yxatdan o'ting";
+      buttonText = "Ro'yxatdan o'tish";
+      onPressed = () => Navigator.pushNamed(context, "/login");
+    } else if (isPending) {
       message = "Akkauntingiz tekshirilmoqda. Chat xizmatidan foydalanish uchun akkaunt tasdiqlanishi kerak.";
       buttonText = "";
       onPressed = null;
@@ -124,13 +137,14 @@ class _SupportChatPageState extends State<SupportChatPage> {
       message = "Akkauntingiz rad etilgan. Chat xizmatidan foydalanish uchun qayta ro'yxatdan o'ting.";
       buttonText = "Qayta ro'yxatdan o'tish";
       onPressed = () {
-        context.read<AuthBloc>().add(LogoutEvent());
-        Navigator.pushNamed(context, "/login");
+        if (_userModel != null && _userModel!.phone.isNotEmpty) {
+          Navigator.pushNamed(
+            context,
+            "/register",
+            arguments: _userModel!.phone,
+          );
+        }
       };
-    } else {
-      message = "Chat xizmatidan foydalanish uchun ro'yxatdan o'ting va akkauntingizni tasdiqlang.";
-      buttonText = "Ro'yxatdan o'tish";
-      onPressed = () => Navigator.pushNamed(context, "/login");
     }
 
     return Center(
