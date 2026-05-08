@@ -8,6 +8,7 @@ import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/data/models/user_model/user_model.dart';
+import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/auth/pages/sign_in_page.dart';
 import 'package:uts_cargo/features/profile/bloc/profile_bloc.dart';
 import 'package:uts_cargo/features/profile/pages/relatives_page.dart';
@@ -38,6 +39,17 @@ class _ProfilePageState extends State<ProfilePage> {
     context.read<ProfileBloc>().add(GetProfileEvent());
   }
 
+  void _logout() async {
+    context.read<AuthBloc>().add(LogoutEvent());
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const SignInPage()),
+            (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,10 +60,17 @@ class _ProfilePageState extends State<ProfilePage> {
             context.showSnackBarMessage(state.error);
           }
           if (state is ProfileDeleted) {
+            context.read<AuthBloc>().add(LogoutEvent());
             _navigateToLogin(context);
           }
         },
         builder: (context, state) {
+          final authState = context.watch<AuthBloc>().state;
+          final bool isAuthenticated = authState is AuthenticatedState;
+          final bool isPending = authState is PendingState;
+          final bool isRejected = authState is RejectedState;
+          final bool isUnauthenticated = authState is UnauthenticatedState;
+
           UserModel? userModel;
           if (state is ProfileSuccess) userModel = state.model;
           if (state is ProfileFailure) userModel = state.model;
@@ -59,22 +78,6 @@ class _ProfilePageState extends State<ProfilePage> {
           if (state is ProfileLoading && userModel == null) {
             return const Center(child: CircularProgressIndicator());
           }
-
-          // if (state is ProfileFailure && userModel == null) {
-          //   return Center(
-          //     child: Column(
-          //       mainAxisAlignment: MainAxisAlignment.center,
-          //       children: [
-          //         Text(state.error, textAlign: TextAlign.center),
-          //         const SizedBox(height: 16),
-          //         ElevatedButton(
-          //           onPressed: _refreshProfile,
-          //           child: Text(AppStrings.retry),
-          //         ),
-          //       ],
-          //     ),
-          //   );
-          // }
 
           return RefreshIndicator(
             onRefresh: _refreshProfile,
@@ -91,7 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       model: userModel,
                       onPressed: () {
                         Clipboard.setData(
-                          ClipboardData(text: userModel!.userId),
+                          ClipboardData(text: userModel!.userId ?? ""),
                         );
                         context.showSnackBarMessage(AppStrings.idCopied);
                       },
@@ -104,20 +107,29 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Center(child: Text(AppStrings.profileNotFound)),
                     ),
                   const SizedBox(height: 16.0),
-                  WActionButton(
-                    svgPath: AppSvg.icBadge,
-                    buttonName: AppStrings.additionalPassport,
-                    onPressed: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const RelativesPage(),
-                        ),
-                      );
-                      if (mounted) _refreshProfile();
-                    },
-                  ),
+
+                  if (isAuthenticated || isPending || isRejected || isUnauthenticated)
+                    WActionButton(
+                      svgPath: AppSvg.icBadge,
+                      buttonName: AppStrings.additionalPassport,
+                      onPressed: () async {
+                        if (isAuthenticated) {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RelativesPage(),
+                            ),
+                          );
+                          if (mounted) _refreshProfile();
+                        } else {
+                          context.showSnackBarMessage(
+                              "Bu funksiyadan foydalanish uchun akkaunt tasdiqlangan bo'lishi kerak"
+                          );
+                        }
+                      },
+                    ),
                   const SizedBox(height: 16.0),
+
                   WActionButton(
                     svgPath: AppSvg.icLocation,
                     buttonName: AppStrings.deliveryPoint,
@@ -126,19 +138,22 @@ class _ProfilePageState extends State<ProfilePage> {
                     },
                   ),
                   const SizedBox(height: 16.0),
+
                   WActionButton(
                     svgPath: AppSvg.icLanguage,
                     buttonName:
-                        "${AppStrings.appLanguage} (${AppStrings.language})",
+                    "${AppStrings.appLanguage} (${AppStrings.language})",
                     onPressed: () => _showLanguageBottomSheet(context),
                   ),
                   const SizedBox(height: 16.0),
+
                   WActionButton(
                     svgPath: AppSvg.icInfo,
                     buttonName: AppStrings.aboutApp,
                     onPressed: () {},
                   ),
                   const SizedBox(height: 16.0),
+
                   WActionButton(
                     svgPath: AppSvg.icWarning,
                     buttonName: AppStrings.privacyPolicy,
@@ -149,22 +164,52 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 16.0),
+
+                  if (isRejected)
+                    WActionButton(
+                      svgPath: AppSvg.icLogout,
+                      buttonName: "Qayta ro'yxatdan o'tish",
+                      iconColor: AppColors.redColor,
+                      txtColor: AppColors.redColor,
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          "/register",
+                          arguments: userModel!.phone,
+                        );
+                      },
+                    ),
+
+                  if (isUnauthenticated)
+                    WActionButton(
+                      svgPath: AppSvg.icLogout,
+                      buttonName: "Ro'yxatdan o'tish",
+                      iconColor: AppColors.mainColor,
+                      txtColor: AppColors.blackColor,
+                      onPressed: () => Navigator.pushNamed(context, "/login"),
+                    ),
+
+                  if (isAuthenticated)
+                    WActionButton(
+                      svgPath: AppSvg.icLogout,
+                      buttonName: AppStrings.deleteAccount,
+                      iconColor: AppColors.redColor,
+                      txtColor: AppColors.redColor,
+                      onPressed: () => _showDeleteAccountDialog(context),
+                    ),
+
+                  const SizedBox(height: 16.0),
+
                   WActionButton(
                     svgPath: AppSvg.icLogout,
                     buttonName: "Hisobdan chiqish",
                     iconColor: AppColors.mainColor,
                     txtColor: AppColors.blackColor,
-                    onPressed: () => _showDeleteAccountDialog(context),
+                    onPressed: () => _showLogoutDialog(context),
                   ),
+
                   const SizedBox(height: 16.0),
-                  WActionButton(
-                    svgPath: AppSvg.icLogout,
-                    buttonName: AppStrings.deleteAccount,
-                    iconColor: AppColors.redColor,
-                    txtColor: AppColors.redColor,
-                    onPressed: () => _showDeleteAccountDialog(context),
-                  ),
-                  const SizedBox(height: 16.0),
+
                   Text(
                     "${AppStrings.appVersion} 1.0.0+1",
                     style: TextStyle(
@@ -194,22 +239,26 @@ class _ProfilePageState extends State<ProfilePage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        IconButton(
-          onPressed: () {
-            if (userModel != null) {
-              _showQRBottomSheet(context, userModel.userId);
-            }
-          },
-          icon: SvgPicture.asset(
-            AppSvg.icQrCod,
-            colorFilter: const ColorFilter.mode(
-              AppColors.mainColor,
-              BlendMode.srcIn,
+        if (userModel != null && userModel.userId != null && isAuthenticated)
+          IconButton(
+            onPressed: () {
+              _showQRBottomSheet(context, userModel.userId ?? "");
+            },
+            icon: SvgPicture.asset(
+              AppSvg.icQrCod,
+              colorFilter: const ColorFilter.mode(
+                AppColors.mainColor,
+                BlendMode.srcIn,
+              ),
             ),
           ),
-        ),
       ],
     ).paddingOnly(left: 16.0);
+  }
+
+  bool get isAuthenticated {
+    final authState = context.read<AuthBloc>().state;
+    return authState is AuthenticatedState;
   }
 
   void openPolicy(BuildContext context, String title, String url) {
@@ -226,7 +275,7 @@ class _ProfilePageState extends State<ProfilePage> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const SignInPage()),
-      (route) => false,
+          (route) => false,
     );
   }
 
@@ -253,6 +302,80 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => WQRCodeBottomSheet(qrData: qrData),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: AppColors.screenColor,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Hisobdan chiqish",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Haqiqatan ham hisobdan chiqmoqchimisiz?",
+              textAlign: TextAlign.start,
+              style: const TextStyle(color: AppColors.grayColor),
+            ),
+          ],
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: AppColors.grayColor200),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: Text(
+                    AppStrings.cancel,
+                    style: const TextStyle(
+                      color: AppColors.grayColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.mainColor,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    _logout();
+                  },
+                  child: Text(
+                    "Chiqish",
+                    style: const TextStyle(
+                      color: AppColors.whiteColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -316,27 +439,27 @@ class _ProfilePageState extends State<ProfilePage> {
                       onPressed: isLoading
                           ? null
                           : () {
-                              context.read<ProfileBloc>().add(
-                                DeleteAccountEvent(),
-                              );
-                              Navigator.pop(dialogContext);
-                            },
+                        context.read<ProfileBloc>().add(
+                          DeleteAccountEvent(),
+                        );
+                        Navigator.pop(dialogContext);
+                      },
                       child: isLoading
                           ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: AppColors.whiteColor,
-                                strokeWidth: 2,
-                              ),
-                            )
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: AppColors.whiteColor,
+                          strokeWidth: 2,
+                        ),
+                      )
                           : Text(
-                              AppStrings.delete,
-                              style: const TextStyle(
-                                color: AppColors.whiteColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                        AppStrings.delete,
+                        style: const TextStyle(
+                          color: AppColors.whiteColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     );
                   },
                 ),

@@ -81,7 +81,7 @@ class WUserInfo extends StatelessWidget {
                   children: [
                     WUserInfoTxt(
                       infoName: "${AppStrings.id}:",
-                      info: model.userId,
+                      info: model.userId??"",
                       icon: AppSvg.icCopy,
                       onPressed: onPressed,
                     ),

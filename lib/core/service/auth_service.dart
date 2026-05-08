@@ -1,33 +1,29 @@
-import 'package:flutter/material.dart';
+// core/service/auth_service.dart
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../features/auth/pages/sign_in_page.dart';
-import '../constants/constants.dart';
+import 'package:uts_cargo/core/constants/constants.dart';
 
 class AuthService {
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-  static bool _isRedirecting = false;
-
-  static Future<void> logoutAndRedirect() async {
-    if (_isRedirecting) return;
-    _isRedirecting = true;
-
+  static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(Constants.token);
-
-    if (navigatorKey.currentState != null) {
-      navigatorKey.currentState!.pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => const SignInPage(),
-        ),
-            (route) => false,
-      );
-    }
-
-    _isRedirecting = false;
+    await prefs.setString(Constants.token, token);
+    print("✅ Token saved: $token"); // Debug uchun
   }
-  static Future<void> clearToken() async {
+
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(Constants.token);
+    print("🔑 Token retrieved: ${token != null ? "Yes ($token)" : "No"}"); // Debug uchun
+    return token;
+  }
+
+  static Future<void> clearAuth() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(Constants.token);
+    print("🗑️ Token cleared"); // Debug uchun
+  }
+
+  static Future<bool> hasValidToken() async {
+    final token = await getToken();
+    return token != null && token.isNotEmpty;
   }
 }

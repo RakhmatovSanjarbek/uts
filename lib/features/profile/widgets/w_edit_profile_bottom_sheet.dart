@@ -220,7 +220,7 @@ class _WEditProfileBottomSheetState extends State<WEditProfileBottomSheet> {
       jshshir: tinController.text.trim(),
       passportSeries: serialController.text.trim().toUpperCase(),
       birthDate: dateController.text.trim(),
-      address: addressController.text.trim(),
+      address: addressController.text.trim(), status: '', statusDisplay: '',
     );
     context.read<ProfileBloc>().add(UpdateProfileEvent(updatedUser));
   }

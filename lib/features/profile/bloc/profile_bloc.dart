@@ -1,20 +1,21 @@
+// features/profile/bloc/profile_bloc.dart
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uts_cargo/core/service/auth_service.dart';
 import 'package:uts_cargo/data/models/user_model/user_model.dart';
 import 'package:uts_cargo/data/models/user_model/user_relative_model.dart';
 import 'package:uts_cargo/domain/repositories/profile_repository.dart';
-
-import '../../../core/service/auth_service.dart';
+import '../../auth/bloc/auth_bloc.dart';
 
 part 'profile_event.dart';
 part 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final ProfileRepository repository;
+  final AuthBloc? authBloc;
 
-  ProfileBloc(this.repository) : super(const ProfileInitial()) {
+  ProfileBloc(this.repository, {this.authBloc}) : super(const ProfileInitial()) {
     on<GetProfileEvent>(_onGetProfile);
     on<UpdateProfileEvent>(_onUpdateProfile);
     on<DeleteAccountEvent>(_onDeleteAccount);
@@ -29,11 +30,22 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     return null;
   }
 
+  // features/profile/bloc/profile_bloc.dart (GetProfileEvent qismi)
+  // features/profile/bloc/profile_bloc.dart (GetProfileEvent qismi)
   Future<void> _onGetProfile(GetProfileEvent event, Emitter<ProfileState> emit) async {
     emit(const ProfileInitial());
     emit(const ProfileLoading());
     try {
       final res = await repository.getUser();
+
+      // AuthBloc ni yangilaymiz
+      if (authBloc != null) {
+        final token = await AuthService.getToken();
+        if (token != null) {
+          authBloc!.add(UpdateUserEvent(res));
+        }
+      }
+
       emit(ProfileSuccess(res));
     } catch (e) {
       emit(ProfileFailure(_mapErrorToMessage(e)));
@@ -48,6 +60,12 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     emit(const ProfileLoading());
     try {
       final res = await repository.updateUser(event.data, currentModel);
+
+      // AuthBloc ni yangilaymiz
+      if (authBloc != null && authBloc!.state is AuthenticatedState) {
+        authBloc!.add(UpdateUserEvent(res));
+      }
+
       emit(ProfileSuccess(res));
     } catch (e) {
       emit(ProfileFailure(_mapErrorToMessage(e), model: currentModel));
@@ -62,6 +80,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     emit(const ProfileLoading());
     try {
       await repository.deleteAccount();
+      await AuthService.clearAuth();
+      if (authBloc != null) {
+        authBloc!.add(LogoutEvent());
+      }
       emit(const ProfileDeleted());
     } catch (e) {
       emit(ProfileFailure(_mapErrorToMessage(e), model: currentModel));
@@ -101,7 +123,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       ) async {
     final currentModel = _getCurrentModel();
     try {
-      emit(ProfileLoading());
+      emit(const ProfileLoading());
       await repository.deletePassport(event.id);
       emit(const PassportActionSuccess("Pasport muvaffaqiyatli o'chirildi"));
       await Future.delayed(const Duration(milliseconds: 500));

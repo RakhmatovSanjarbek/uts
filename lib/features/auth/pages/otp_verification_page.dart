@@ -1,21 +1,17 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:pinput/pinput.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
 import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
+import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/auth/widgets/w_loading_button.dart';
-
-import '../../../../core/theme/app_colors.dart';
-import '../../../core/svg/app_svg.dart';
+import '../../profile/bloc/profile_bloc.dart';
 
 class OtpVerificationPage extends StatefulWidget {
   final String phoneNumber;
-
   const OtpVerificationPage({super.key, required this.phoneNumber});
 
   @override
@@ -52,6 +48,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       }
     });
   }
+
   String get timerText {
     final minutes = (_start ~/ 60).toString().padLeft(2, '0');
     final seconds = (_start % 60).toString().padLeft(2, '0');
@@ -100,16 +97,22 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       backgroundColor: AppColors.screenColor,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthSuccess) {
-            if (state.response.token != null) {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                "/dashboard",
-                (route) => false,
-              );
-            } else if (state.response.token == null) {
-              context.showSnackBarMessage("Xatolik yuz berdi Qayta urining");
-            }
+          if (state is TokenExistsState ||
+              state is AuthenticatedState ||
+              state is PendingState ||
+              state is RejectedState) {
+            context.read<ProfileBloc>().add(GetProfileEvent());
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              "/dashboard",
+                  (route) => false,
+            );
+          } else if (state is AuthSuccess && state.response.token != null) {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              "/dashboard",
+                  (route) => false,
+            );
           } else if (state is AuthFailure) {
             context.showSnackBarMessage(state.error);
           }
@@ -124,15 +127,13 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => Navigator.pop(context),
                     child: Text(
                       AppStrings.back,
                       style: TextStyle(
-                          color: AppColors.mainColor,
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.bold
+                        color: AppColors.mainColor,
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ).paddingOnly(left: 8.0),
@@ -144,7 +145,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                       color: AppColors.blackColor,
                     ),
                   ),
-                  SizedBox(width: 48.0),
+                  const SizedBox(width: 48.0),
                 ],
               ),
               const SizedBox(height: 12),
@@ -156,7 +157,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                 ),
               ).paddingSymmetric(horizontal: 16.0),
               const SizedBox(height: 24.0),
-
               Pinput(
                 length: 6,
                 controller: pinController,
@@ -170,7 +170,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                   if (value.length < 6) setState(() => isFull = false);
                 },
               ).paddingSymmetric(horizontal: 16.0),
-
               const SizedBox(height: 16.0),
               Center(
                 child: Row(
@@ -185,34 +184,36 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                     ),
                     _canResend
                         ? TextButton(
-                            onPressed: _canResend
-                                ? () {
-                                    startTimer();
-                                  }
-                                : null,
-                            child: Text(
-                              AppStrings.resend,
-                              style: TextStyle(
-                                color: _canResend
-                                    ? AppColors.mainColor
-                                    : AppColors.grayColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.0,
-                              ),
-                            ),
-                          )
+                      onPressed: _canResend
+                          ? () {
+                        startTimer();
+                        context.read<AuthBloc>().add(
+                          SignInEvent(widget.phoneNumber),
+                        );
+                      }
+                          : null,
+                      child: Text(
+                        AppStrings.resend,
+                        style: TextStyle(
+                          color: _canResend
+                              ? AppColors.mainColor
+                              : AppColors.grayColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16.0,
+                        ),
+                      ),
+                    )
                         : Text(
-                            timerText,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.mainColor,
-                            ),
-                          ),
+                      timerText,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.mainColor,
+                      ),
+                    ),
                   ],
                 ),
               ),
-
               const Spacer(),
               SafeArea(
                 child: WLoadingButton(

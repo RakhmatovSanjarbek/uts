@@ -42,7 +42,6 @@ import 'features/order/bloc/order_bloc.dart';
 import 'features/video_lesson/pages/Video_page.dart';
 
 void main() async {
-  // 1. Flutter binding va EasyLocalization ni ishga tushirish
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
@@ -115,7 +114,10 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => LanguageBloc()),
         BlocProvider(create: (_) => AuthBloc(authRepository)),
-        BlocProvider(create: (_) => ProfileBloc(profileRepository)),
+        BlocProvider(create: (context) => ProfileBloc(
+          profileRepository,
+          authBloc: context.read<AuthBloc>(), // AuthBloc ni yuboramiz
+        )),
         BlocProvider(create: (_) => OrderBloc(orderRepository)),
         BlocProvider(create: (_) => ChatBloc(chatRepository)),
         BlocProvider(create: (_) => VideoBloc(videoRepository)),

@@ -5,9 +5,9 @@ import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/core/utils/map_service.dart';
+import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/home/bloc/warehouse_bloc.dart';
 import 'package:uts_cargo/features/home/info_bloc/info_bloc.dart';
-import 'package:uts_cargo/features/profile/bloc/profile_bloc.dart';
 import 'package:uts_cargo/features/home/widgets/w_basic_management.dart';
 import 'package:uts_cargo/features/home/widgets/w_contact_bottom_sheet.dart';
 import 'package:uts_cargo/features/home/widgets/w_home_toolbar.dart';
@@ -15,8 +15,10 @@ import 'package:uts_cargo/features/home/widgets/w_price_bottom_sheet.dart';
 import 'package:uts_cargo/features/home/widgets/w_quick_access.dart';
 import 'package:uts_cargo/features/home/widgets/w_warehouse.dart';
 import 'package:uts_cargo/features/home/widgets/w_warehouse_bottom_sheet.dart';
-
+import 'package:uts_cargo/features/profile/bloc/profile_bloc.dart';
 import '../../../data/models/info_model/info_model.dart';
+import '../../../data/models/user_model/user_model.dart';
+import '../../../data/models/warehouse/arrived_group_response.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,7 +30,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   InfoModel? _cachedInfo;
   String? _userId;
-  dynamic _lastWarehouseData;
+  List<ArrivedGroupResponse> _lastWarehouseData = [];
+  bool _isRefreshing = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -37,125 +41,355 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _loadAllData() {
+    final authState = context.read<AuthBloc>().state;
     context.read<InfoBloc>().add(GetInfoEvent());
     context.read<WarehouseBloc>().add(GetArrivedGroupsEvent());
-    context.read<ProfileBloc>().add(GetProfileEvent());
+
+    if (authState is AuthenticatedState ||
+        authState is PendingState ||
+        authState is RejectedState) {
+      context.read<ProfileBloc>().add(GetProfileEvent());
+    }
+
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _onRefresh() async {
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    try {
+      final authState = context.read<AuthBloc>().state;
+      context.read<InfoBloc>().add(GetInfoEvent());
+      context.read<WarehouseBloc>().add(GetArrivedGroupsEvent());
+      if (authState is AuthenticatedState ||
+          authState is PendingState ||
+          authState is RejectedState) {
+        context.read<ProfileBloc>().add(GetProfileEvent());
+      }
+      await Future.delayed(const Duration(seconds: 1));
+    } finally {
+      if (mounted) setState(() => _isRefreshing = false);
+    }
+  }
+
+  void _showFeatureUnavailableMessage(BuildContext context, AuthState authState) {
+    String message = "";
+
+    if (authState is UnauthenticatedState) {
+      message = "Bu funksiyadan foydalanish uchun ro'yxatdan o'ting";
+    } else if (authState is PendingState) {
+      message = "Akkauntingiz tekshirilmoqda. Tasdiqlangandan keyin bu funksiyadan foydalanishingiz mumkin";
+    } else if (authState is RejectedState) {
+      message = "Akkauntingiz rad etilgan. Qayta ro'yxatdan o'ting";
+    } else {
+      message = "Bu funksiyadan foydalanish uchun akkaunt tasdiqlangan bo'lishi kerak";
+    }
+
+    final snackBar = SnackBar(
+      content: Text(message),
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 3),
+      action: (authState is UnauthenticatedState || authState is RejectedState)
+          ? SnackBarAction(
+        label: "Ro'yxatdan o'tish",
+        onPressed: () {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          Navigator.pushNamed(context, "/login");
+        },
+      )
+          : null,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+    // 3 sekunddan keyin snackbarni avtomatik yopish
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.screenColor,
-      body: MultiBlocListener(
-        listeners: [
-          BlocListener<InfoBloc, InfoState>(
-            listener: (context, state) {
-              if (state is InfoSuccess) {
-                setState(() => _cachedInfo = state.model);
-              }
-            },
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        final bool isAuthenticated = authState is AuthenticatedState;
+        final bool isPending = authState is PendingState;
+        final bool isRejected = authState is RejectedState;
+        final bool isUnauthenticated = authState is UnauthenticatedState;
+
+        return Scaffold(
+          backgroundColor: AppColors.screenColor,
+          body: Stack(
+            children: [
+              Column(
+                children: [
+                  WHomeToolbar(
+                    onLocationPressed: () {
+                      MapService.openSystemMap(lat: 41.334485, lng: 69.214603);
+                    },
+                  ),
+                  Expanded(
+                    child: _buildMainContent(
+                      authState,
+                      isAuthenticated,
+                      isPending || isRejected,
+                      isUnauthenticated,
+                      isRejected,
+                    ),
+                  ),
+                  if (isRejected && authState is RejectedState)
+                    _buildRejectionInfo(authState.user),
+                ],
+              ),
+              if (isUnauthenticated)
+                Positioned(
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                  child: _buildBottomRegisterButton(),
+                ),
+            ],
           ),
-          BlocListener<ProfileBloc, ProfileState>(
-            listener: (context, state) {
-              if (state is ProfileSuccess) {
-                setState(() => _userId = state.model.userId);
-              }
-            },
-          ),
-          BlocListener<WarehouseBloc, WarehouseState>(
-            listener: (context, state) {
-              if (state is WarehouseError) {
-                context.showSnackBarMessage(state.message);
-              }
-              // Ma'lumot kelganda uni keshga olamiz
-              if (state is WarehouseLoaded) {
-                setState(() => _lastWarehouseData = state.groups);
-              }
-            },
+        );
+      },
+    );
+  }
+
+  Widget _buildRejectionInfo(UserModel user) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
           ),
         ],
-        child: BlocBuilder<WarehouseBloc, WarehouseState>(
-          builder: (context, state) {
-            // Agar loading bo'lsa va hali birinchi marta ma'lumot kelmagan bo'lsa
-            if (state is WarehouseLoading && _lastWarehouseData == null) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            // Agar ma'lumot bo'lsa (yoki Loaded yoki Refresh paytidagi Loading)
-            if (_lastWarehouseData != null) {
-              return _buildMainContent(context, _lastWarehouseData);
-            }
-
-            // Xatolik bo'lsa ham UI bo'sh qolmasligi uchun
-            return const SizedBox();
-          },
-        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.red, size: 20),
+              SizedBox(width: 8),
+              Text(
+                "Akkaunt rad etilgan",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (user.rejectionReasonDisplay != null) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Sabab: ", style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
+                Expanded(child: Text(user.rejectionReasonDisplay!, style: const TextStyle(color: Colors.black87, fontSize: 13))),
+              ],
+            ),
+            const SizedBox(height: 4),
+          ],
+          if (user.rejectionNote != null && user.rejectionNote!.isNotEmpty) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Izoh: ", style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
+                Expanded(child: Text(user.rejectionNote!, style: const TextStyle(color: Colors.black87, fontSize: 13))),
+              ],
+            ),
+          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                context.read<AuthBloc>().add(LogoutEvent());
+                Navigator.pushNamed(context, "/login");
+              },
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text("Qayta ro'yxatdan o'tish"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildMainContent(BuildContext context, dynamic groups) {
-    // Ekranning umumiy balandligini olish
-    final double screenHeight = MediaQuery.of(context).size.height;
-
-    return Stack(
-      children: [
-        RefreshIndicator(
-          // MUHIM: Toolbar ostidan chiqishi uchun (Toolbar taxminan 140px)
-          displacement: 150,
-          onRefresh: () async {
-            _loadAllData();
-            // Bloc stream orqali yangi holatni kutish
-            await context.read<WarehouseBloc>().stream.firstWhere(
-                  (state) => state is WarehouseLoaded || state is WarehouseError,
-            );
-          },
-          child: SingleChildScrollView(
-            // Doimo skroll bo'lishi uchun fizika
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: ConstrainedBox(
-              // Kontent kichik bo'lsa ham pastga tortish imkonini beradi
-              constraints: BoxConstraints(minHeight: screenHeight),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 140.0), // Toolbar uchun joy
-                  WQuickAccess(
-                    onProhibitedPressed: () =>
-                        Navigator.pushNamed(context, "/prohibited"),
-                    onCalculatorPressed: () =>
-                        Navigator.pushNamed(context, "/calculator"),
-                  ),
-                  const SizedBox(height: 16.0),
-                  Text(
-                    AppStrings.orders,
-                    style: const TextStyle(
-                      color: AppColors.blackColor,
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ).paddingOnly(left: 16.0),
-                  const SizedBox(height: 12.0),
-                  WWarehouse(model: groups),
-                  const SizedBox(height: 16.0),
-                  WBasicManagement(
-                    onVideoPressed: () => Navigator.pushNamed(context, "/video"),
-                    onWarehousePressed: () => _showWarehouseBottomSheet(context),
-                    onAboutPressed: () => Navigator.pushNamed(context, "/about"),
-                    onPricePressed: () => _showPriceBottomSheet(context),
-                    onContactPressed: () => _showContactBottomSheet(context),
-                  ),
-                  const SizedBox(height: 50.0), // Pastki qismda biroz joy
-                ],
-              ),
+  Widget _buildBottomRegisterButton() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.person_add, color: AppColors.mainColor),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              "Ilovadan to'liq foydalanish uchun ro'yxatdan o'ting",
+              style: TextStyle(fontSize: 14),
             ),
           ),
+          ElevatedButton(
+            onPressed: () => Navigator.pushNamed(context, "/login"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.mainColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text("Ro'yxatdan o'tish"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMainContent(
+      AuthState authState,
+      bool isAuthenticated,
+      bool isPendingOrRejected,
+      bool isUnauthenticated,
+      bool isRejected,
+      ) {
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<InfoBloc, InfoState>(
+          listener: (context, state) {
+            if (state is InfoSuccess) {
+              setState(() => _cachedInfo = state.model);
+            }
+            // Xatolik bo'lsa hech narsa qilmaymiz, UI baribir ko'rinadi
+          },
         ),
-        // Toolbar har doim eng ustida
-        WHomeToolbar(onLocationPressed: () {
-          MapService.openSystemMap(lat: 41.334485, lng: 69.214603);
-        },),
+        BlocListener<ProfileBloc, ProfileState>(
+          listener: (context, state) {
+            if (state is ProfileSuccess) {
+              setState(() => _userId = state.model.userId);
+            }
+          },
+        ),
+        BlocListener<WarehouseBloc, WarehouseState>(
+          listener: (context, state) {
+            if (state is WarehouseLoaded) {
+              setState(() => _lastWarehouseData = state.groups ?? []);
+            }
+            // Xatolik bo'lsa, _lastWarehouseData ni bo'sh qoldiramiz
+          },
+        ),
       ],
+      child: BlocBuilder<WarehouseBloc, WarehouseState>(
+        builder: (context, state) {
+          // Yuklanish holati - faqat birinchi marta va _lastWarehouseData bo'sh bo'lsa
+          if (state is WarehouseLoading && _lastWarehouseData.isEmpty && _isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // Har doim UI ko'rsatamiz, ma'lumot bo'lmasa bo'sh list bilan
+          final List<ArrivedGroupResponse> data = _lastWarehouseData;
+          return _buildMainContentBody(
+            context,
+            data,
+            authState,
+            isAuthenticated,
+            isPendingOrRejected,
+            isUnauthenticated,
+            isRejected,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMainContentBody(
+      BuildContext context,
+      List<ArrivedGroupResponse> groups,
+      AuthState authState,
+      bool isAuthenticated,
+      bool isPendingOrRejected,
+      bool isUnauthenticated,
+      bool isRejected,
+      ) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final bottomPadding = isRejected ? 180.0 : (isUnauthenticated ? 100.0 : 0.0);
+
+    return RefreshIndicator(
+      displacement: 150,
+      onRefresh: _onRefresh,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: screenHeight - bottomPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              WQuickAccess(
+                onProhibitedPressed: () => Navigator.pushNamed(context, "/prohibited"),
+                onCalculatorPressed: () {
+                  if (isAuthenticated) {
+                    Navigator.pushNamed(context, "/calculator");
+                  } else {
+                    _showFeatureUnavailableMessage(context, authState);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              Text(
+                AppStrings.orders,
+                style: const TextStyle(color: AppColors.blackColor, fontSize: 18.0, fontWeight: FontWeight.bold),
+              ).paddingOnly(left: 16.0),
+              const SizedBox(height: 12),
+              WWarehouse(model: groups),
+              const SizedBox(height: 16),
+              WBasicManagement(
+                onVideoPressed: () => Navigator.pushNamed(context, "/video"),
+                onWarehousePressed: () {
+                  if (isAuthenticated) {
+                    _showWarehouseBottomSheet(context);
+                  } else {
+                    _showFeatureUnavailableMessage(context, authState);
+                  }
+                },
+                onAboutPressed: () => Navigator.pushNamed(context, "/about"),
+                onPricePressed: () => _showPriceBottomSheet(context),
+                onContactPressed: () => _showContactBottomSheet(context),
+              ),
+              const SizedBox(height: 30),
+              if (_isRefreshing)
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2))),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -169,15 +403,15 @@ class _HomePageState extends State<HomePage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => WWarehouseBottomSheet(
-        userId: cleanId,
-        model: _cachedInfo!,
-      ),
+      builder: (context) => WWarehouseBottomSheet(userId: cleanId, model: _cachedInfo!),
     );
   }
 
   void _showPriceBottomSheet(BuildContext context) {
-    if (_cachedInfo == null) return;
+    if (_cachedInfo == null) {
+      context.showSnackBarMessage("Ma'lumotlar yuklanmoqda...");
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -187,7 +421,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showContactBottomSheet(BuildContext context) {
-    if (_cachedInfo == null) return;
+    if (_cachedInfo == null) {
+      context.showSnackBarMessage("Ma'lumotlar yuklanmoqda...");
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

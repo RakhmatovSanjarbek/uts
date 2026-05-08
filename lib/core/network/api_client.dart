@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:uts_cargo/core/constants/constants.dart';
-import 'package:uts_cargo/core/service/auth_service.dart';
 
 class ApiClient {
   final Dio _dio;
@@ -24,12 +23,6 @@ class ApiClient {
             options.headers["Authorization"] = "Bearer $token";
           }
           return handler.next(options);
-        },
-        onError: (DioException e, handler) async {
-          if (e.response != null && e.response?.statusCode == 401) {
-            await AuthService.logoutAndRedirect();
-          }
-          return handler.next(e);
         },
       ),
     );
@@ -86,10 +79,6 @@ class ApiClient {
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return response.data;
-    }
-
-    if (response.statusCode == 401) {
-      AuthService.logoutAndRedirect();
     }
 
     throw DioException(

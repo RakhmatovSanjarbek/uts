@@ -8,6 +8,7 @@ import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
+import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 
 import '../bloc/chat_bloc.dart';
 import '../widgets/w_date_divider.dart';
@@ -29,7 +30,14 @@ class _SupportChatPageState extends State<SupportChatPage> {
   @override
   void initState() {
     super.initState();
-    context.read<ChatBloc>().add(GetChatsEvent());
+    _checkAndLoadChat();
+  }
+
+  void _checkAndLoadChat() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthenticatedState) {
+      context.read<ChatBloc>().add(GetChatsEvent());
+    }
   }
 
   void _scrollToBottom() {
@@ -86,73 +94,183 @@ class _SupportChatPageState extends State<SupportChatPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: BlocConsumer<ChatBloc, ChatState>(
-              listener: (context, state) {
-                if (state is ChatSuccess) {
-                  _scrollToBottom();
-                } else if (state is ChatFailure) {
-                  context.showSnackBarMessage(state.error);
-                }
-              },
-              builder: (context, state) {
-                if (state is ChatLoading && state is! ChatSuccess) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+      body: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, authState) {
+          final bool isAuthenticated = authState is AuthenticatedState;
+          final bool isPending = authState is PendingState;
+          final bool isRejected = authState is RejectedState;
+          final bool isUnauthenticated = authState is UnauthenticatedState;
 
-                if (state is ChatSuccess) {
-                  final messages = state.response.chats;
-                  return ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    reverse: false,
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final msg = messages[index];
-                      final isUser = !msg.isFromAdmin;
-                      bool showDate = false;
-                      if (index == 0) {
-                        showDate = true;
-                      } else {
-                        final olderMsg = messages[index - 1];
-                        if (!_isSameDay(
-                          msg.timestampMs,
-                          olderMsg.timestampMs,
-                        )) {
-                          showDate = true;
-                        }
-                      }
-                      return Column(
-                        children: [
-                          if (showDate)
-                            WDateDivider(timestamp: msg.timestampMs),
-                          Align(
-                            alignment: isUser
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            child: WMessageBubble(message: msg, isUser: isUser),
+          if (!isAuthenticated) {
+            return _buildUnavailableScreen(isPending, isRejected, isUnauthenticated);
+          }
+
+          return _buildChatContent();
+        },
+      ),
+    );
+  }
+
+  Widget _buildUnavailableScreen(bool isPending, bool isRejected, bool isUnauthenticated) {
+    String message = "";
+    String buttonText = "";
+    VoidCallback? onPressed;
+
+    if (isPending) {
+      message = "Akkauntingiz tekshirilmoqda. Chat xizmatidan foydalanish uchun akkaunt tasdiqlanishi kerak.";
+      buttonText = "";
+      onPressed = null;
+    } else if (isRejected) {
+      message = "Akkauntingiz rad etilgan. Chat xizmatidan foydalanish uchun qayta ro'yxatdan o'ting.";
+      buttonText = "Qayta ro'yxatdan o'tish";
+      onPressed = () {
+        context.read<AuthBloc>().add(LogoutEvent());
+        Navigator.pushNamed(context, "/login");
+      };
+    } else {
+      message = "Chat xizmatidan foydalanish uchun ro'yxatdan o'ting va akkauntingizni tasdiqlang.";
+      buttonText = "Ro'yxatdan o'tish";
+      onPressed = () => Navigator.pushNamed(context, "/login");
+    }
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              AppSvg.icMessage,
+              width: 80,
+              height: 80,
+              colorFilter: ColorFilter.mode(
+                AppColors.grayColor,
+                BlendMode.srcIn,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.grayColor,
+              ),
+            ),
+            if (buttonText.isNotEmpty && onPressed != null) ...[
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: onPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.mainColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(buttonText),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatContent() {
+    return Column(
+      children: [
+        Expanded(
+          child: BlocConsumer<ChatBloc, ChatState>(
+            listener: (context, state) {
+              if (state is ChatSuccess) {
+                _scrollToBottom();
+              } else if (state is ChatFailure) {
+                context.showSnackBarMessage(state.error);
+              }
+            },
+            builder: (context, state) {
+              if (state is ChatLoading && state is! ChatSuccess) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (state is ChatSuccess) {
+                final messages = state.response.chats;
+                if (messages.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset(
+                          AppSvg.icMessage,
+                          width: 60,
+                          height: 60,
+                          colorFilter: ColorFilter.mode(
+                            AppColors.grayColor,
+                            BlendMode.srcIn,
                           ),
-                        ],
-                      );
-                    },
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Xabarlar mavjud emas",
+                          style: TextStyle(
+                            color: AppColors.grayColor,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 }
-                return const SizedBox.shrink();
-              },
-            ),
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  reverse: false,
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = messages[index];
+                    final isUser = !msg.isFromAdmin;
+                    bool showDate = false;
+                    if (index == 0) {
+                      showDate = true;
+                    } else {
+                      final olderMsg = messages[index - 1];
+                      if (!_isSameDay(
+                        msg.timestampMs,
+                        olderMsg.timestampMs,
+                      )) {
+                        showDate = true;
+                      }
+                    }
+                    return Column(
+                      children: [
+                        if (showDate)
+                          WDateDivider(timestamp: msg.timestampMs),
+                        Align(
+                          alignment: isUser
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                          child: WMessageBubble(message: msg, isUser: isUser),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
-          WInputArea(
-            controller: _controller,
-            onSend: _sendText,
-            onPickImage: _sendImage,
-          ),
-        ],
-      ),
+        ),
+        WInputArea(
+          controller: _controller,
+          onSend: _sendText,
+          onPickImage: _sendImage,
+        ),
+      ],
     );
   }
 
@@ -163,7 +281,10 @@ class _SupportChatPageState extends State<SupportChatPage> {
   }
 
   Future<void> _refreshChat() async {
-    context.read<ChatBloc>().add(GetChatsEvent());
-    await Future.delayed(const Duration(seconds: 1));
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthenticatedState) {
+      context.read<ChatBloc>().add(GetChatsEvent());
+      await Future.delayed(const Duration(seconds: 1));
+    }
   }
 }
