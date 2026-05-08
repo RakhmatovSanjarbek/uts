@@ -9,6 +9,7 @@ import 'package:uts_cargo/features/order/bloc/order_bloc.dart';
 
 import '../../../../data/models/order_model/order_model.dart';
 import '../../../core/svg/app_svg.dart';
+import '../../../data/models/user_model/user_model.dart';
 import '../widget/w_category_bar.dart';
 import '../widget/w_order_list.dart';
 import '../widget/w_search_bar.dart';
@@ -26,6 +27,7 @@ class _OrderPageState extends State<OrderPage> {
   List<OrderModel> filteredOrders = [];
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  UserModel? _userModel;
 
   final List<String> categories = [
     "Barchasi",
@@ -45,7 +47,10 @@ class _OrderPageState extends State<OrderPage> {
   void _checkAndLoadOrders() {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthenticatedState) {
+      _userModel = authState.user;
       context.read<OrderBloc>().add(GetOrderEvent());
+    } else if (authState is RejectedState) {
+      _userModel = authState.user;
     }
   }
 
@@ -106,6 +111,10 @@ class _OrderPageState extends State<OrderPage> {
         final bool isRejected = authState is RejectedState;
         final bool isUnauthenticated = authState is UnauthenticatedState;
 
+        if (isRejected && authState is RejectedState) {
+          _userModel = authState.user;
+        }
+
         return Scaffold(
           backgroundColor: AppColors.screenColor,
           body: isAuthenticated
@@ -133,8 +142,13 @@ class _OrderPageState extends State<OrderPage> {
       message = "Akkauntingiz rad etilgan. Buyurtmalaringizni ko'rish uchun qayta ro'yxatdan o'ting";
       buttonText = "Qayta ro'yxatdan o'tish";
       onPressed = () {
-        context.read<AuthBloc>().add(LogoutEvent());
-        Navigator.pushNamed(context, "/login");
+        if (_userModel != null && _userModel!.phone.isNotEmpty) {
+          Navigator.pushNamed(
+            context,
+            "/register",
+            arguments: _userModel!.phone,
+          );
+        }
       };
     }
 

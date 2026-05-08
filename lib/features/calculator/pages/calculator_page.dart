@@ -50,6 +50,19 @@ class _CalculatorPageState extends State<CalculatorPage> {
           if (state is CalculatorLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is CalculatorLoaded) {
+            // Bo'sh listni tekshirish
+            if (state.calculations.isEmpty) {
+              return const Center(
+                child: Text(
+                  "Hozircha ma'lumot yo'q",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              );
+            }
+
             return ListView.builder(
               itemCount: state.calculations.length,
               padding: const EdgeInsets.all(16),
@@ -58,7 +71,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                 return Container(
                   width: double.infinity,
                   height: 120.0,
-                  margin: EdgeInsets.only(bottom: 8.0),
+                  margin: const EdgeInsets.only(bottom: 8.0),
                   decoration: BoxDecoration(
                     color: AppColors.whiteColor,
                     borderRadius: BorderRadius.circular(16.0),
@@ -66,7 +79,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                   child: Row(
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.only(
+                        borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(16.0),
                           bottomLeft: Radius.circular(16.0),
                         ),
@@ -78,79 +91,77 @@ class _CalculatorPageState extends State<CalculatorPage> {
                           errorBuilder: (c, e, s) => const Icon(Icons.image),
                         ),
                       ),
-                      SizedBox(width: 16.0),
+                      const SizedBox(width: 16.0),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 "${AppStrings.weight} ${item.weight} ${AppStrings.kg} ",
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: AppColors.blackColor,
                                   fontSize: 16.0,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               item.isResponded
                                   ? Container(
-                                      padding: EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          8.0,
-                                        ),
-                                        color: Colors.green,
-                                      ),
-                                      child: Text(
-                                        "Javob berildi",
-                                        style: TextStyle(
-                                          color: AppColors.whiteColor,
-                                          fontSize: 10.0,
-                                        ),
-                                      ),
-                                    )
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  color: Colors.green,
+                                ),
+                                child: const Text(
+                                  "Javob berildi",
+                                  style: TextStyle(
+                                    color: AppColors.whiteColor,
+                                    fontSize: 10.0,
+                                  ),
+                                ),
+                              )
                                   : Container(
-                                      padding: EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          8.0,
-                                        ),
-                                        color: Colors.orange,
-                                      ),
-                                      child: Text(
-                                        "Javob berildi",
-                                        style: TextStyle(
-                                          color: AppColors.whiteColor,
-                                          fontSize: 10.0,
-                                        ),
-                                      ),
-                                    ),
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  color: Colors.orange,
+                                ),
+                                child: const Text(
+                                  "Kutilmoqda",
+                                  style: TextStyle(
+                                    color: AppColors.whiteColor,
+                                    fontSize: 10.0,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
+                          const SizedBox(height: 4),
                           Text(
                             "${AppStrings.length} ${item.length} \n${AppStrings.height} ${item.height} \n${AppStrings.width} ${item.width}",
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.grayColor,
                               fontSize: 14.0,
                             ),
                           ),
+                          const SizedBox(height: 4),
                           Text(
                             "${AppStrings.dateLabel} ${item.createdAt.toString().substring(0, 10)}",
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.grayColor,
                               fontSize: 14.0,
                             ),
                           ),
                         ],
                       ),
-                      Spacer(),
+                      const Spacer(),
                       Align(
                         alignment: Alignment.centerRight,
                         child: Text(
                           "${item.price ?? '-'} \$",
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.blackColor,
                             fontSize: 16.0,
                             fontWeight: FontWeight.bold,
@@ -165,7 +176,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
           } else if (state is CalculatorError) {
             return Center(child: Text(state.message));
           }
-          return Center(child: Text(AppStrings.noDataYet));
+          return const Center(child: Text("Hozircha ma'lumot yo'q"));
         },
       ),
     );

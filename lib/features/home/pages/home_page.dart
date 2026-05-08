@@ -91,10 +91,22 @@ class _HomePageState extends State<HomePage> {
       duration: const Duration(seconds: 3),
       action: (authState is UnauthenticatedState || authState is RejectedState)
           ? SnackBarAction(
-        label: "Ro'yxatdan o'tish",
+        label: authState is UnauthenticatedState ? "Ro'yxatdan o'tish" : "Qayta ro'yxatdan o'tish",
         onPressed: () {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          Navigator.pushNamed(context, "/login");
+          // UnauthenticatedState bo'lsa login ga, RejectedState bo'lsa register ga telefon raqam bilan o'tadi
+          if (authState is UnauthenticatedState) {
+            Navigator.pushNamed(context, "/login");
+          } else if (authState is RejectedState) {
+            // Rad etilgan foydalanuvchining telefon raqamini olish
+            final user = (authState).user;
+            final phone = user.phone;
+            Navigator.pushNamed(
+              context,
+              "/register",
+              arguments: phone,
+            );
+          }
         },
       )
           : null,
@@ -139,7 +151,7 @@ class _HomePageState extends State<HomePage> {
                       isRejected,
                     ),
                   ),
-                  if (isRejected && authState is RejectedState)
+                  if (isRejected)
                     _buildRejectionInfo(authState.user),
                 ],
               ),
@@ -213,8 +225,7 @@ class _HomePageState extends State<HomePage> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () async {
-                context.read<AuthBloc>().add(LogoutEvent());
-                Navigator.pushNamed(context, "/login");
+                Navigator.pushNamed(context, "/register", arguments: user.phone);
               },
               icon: const Icon(Icons.refresh, size: 18),
               label: const Text("Qayta ro'yxatdan o'tish"),
@@ -284,13 +295,14 @@ class _HomePageState extends State<HomePage> {
             if (state is InfoSuccess) {
               setState(() => _cachedInfo = state.model);
             }
-            // Xatolik bo'lsa hech narsa qilmaymiz, UI baribir ko'rinadi
           },
         ),
         BlocListener<ProfileBloc, ProfileState>(
           listener: (context, state) {
             if (state is ProfileSuccess) {
-              setState(() => _userId = state.model.userId);
+              setState(() {
+                _userId = state.model.userId;
+              });
             }
           },
         ),
@@ -299,18 +311,15 @@ class _HomePageState extends State<HomePage> {
             if (state is WarehouseLoaded) {
               setState(() => _lastWarehouseData = state.groups ?? []);
             }
-            // Xatolik bo'lsa, _lastWarehouseData ni bo'sh qoldiramiz
           },
         ),
       ],
       child: BlocBuilder<WarehouseBloc, WarehouseState>(
         builder: (context, state) {
-          // Yuklanish holati - faqat birinchi marta va _lastWarehouseData bo'sh bo'lsa
           if (state is WarehouseLoading && _lastWarehouseData.isEmpty && _isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Har doim UI ko'rsatamiz, ma'lumot bo'lmasa bo'sh list bilan
           final List<ArrivedGroupResponse> data = _lastWarehouseData;
           return _buildMainContentBody(
             context,
