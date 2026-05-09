@@ -1,4 +1,4 @@
-// features/dashboard/dashboard_page.dart
+// lib/features/dashboard/dashboard_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -38,10 +38,8 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _loadProfileIfNeeded() {
-    // Dashboard ochilganda token bor bo'lsa, profilni yuklaymiz
     final authState = context.read<AuthBloc>().state;
     if (authState.hasToken) {
-      // Profil ma'lumotlarini yuklash
       context.read<ProfileBloc>().add(GetProfileEvent());
     }
   }
@@ -50,9 +48,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        // Logout bo'lganda yoki token o'chirilganda
         if (state is UnauthenticatedState) {
-          // Dashboardda qolamiz, lekin home page da unauthorized banner chiqadi
           if (_currentIndex == 3) {
             setState(() {
               _currentIndex = 0;

@@ -1,3 +1,4 @@
+// lib/features/chat/bloc/chat_state.dart
 part of 'chat_bloc.dart';
 
 class ChatState extends Equatable {
@@ -7,7 +8,14 @@ class ChatState extends Equatable {
 
 class ChatInitial extends ChatState {}
 
-class ChatLoading extends ChatState {}
+class ChatLoading extends ChatState {
+  final bool isAutoRefresh;
+
+  ChatLoading({this.isAutoRefresh = false});
+
+  @override
+  List<Object?> get props => [isAutoRefresh];
+}
 
 class ChatSuccess extends ChatState {
   final ChatResponse response;

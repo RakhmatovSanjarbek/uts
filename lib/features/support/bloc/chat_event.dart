@@ -1,3 +1,4 @@
+// lib/features/chat/bloc/chat_event.dart
 part of 'chat_bloc.dart';
 
 class ChatEvent extends Equatable {
@@ -5,7 +6,14 @@ class ChatEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class GetChatsEvent extends ChatEvent {}
+class GetChatsEvent extends ChatEvent {
+  final bool isAutoRefresh;
+
+  GetChatsEvent({this.isAutoRefresh = false});
+
+  @override
+  List<Object?> get props => [isAutoRefresh];
+}
 
 class SendChatMessageEvent extends ChatEvent {
   final String? message;
@@ -17,5 +25,9 @@ class SendChatMessageEvent extends ChatEvent {
   });
 
   @override
-  List<Object?> get props => [ message, image];
+  List<Object?> get props => [message, image];
 }
+
+class StartAutoRefreshEvent extends ChatEvent {}
+
+class StopAutoRefreshEvent extends ChatEvent {}

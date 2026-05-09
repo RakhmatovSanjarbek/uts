@@ -1,5 +1,6 @@
+// lib/features/support/pages/support_chat_page.dart
+import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -9,7 +10,6 @@ import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
-
 import '../../../data/models/user_model/user_model.dart';
 import '../bloc/chat_bloc.dart';
 import '../widgets/w_date_divider.dart';
@@ -28,21 +28,42 @@ class _SupportChatPageState extends State<SupportChatPage> {
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
   UserModel? _userModel;
+  Timer? _refreshTimer;
+  bool _isFirstLoad = true;
 
   @override
   void initState() {
     super.initState();
-    _checkAndLoadChat();
+    _loadChat();
+    _startAutoRefresh();
   }
 
-  void _checkAndLoadChat() {
-    final authState = context.read<AuthBloc>().state;
-    if (authState is AuthenticatedState) {
-      _userModel = authState.user;
-      context.read<ChatBloc>().add(GetChatsEvent());
-    } else if (authState is RejectedState) {
-      _userModel = authState.user;
-    }
+  @override
+  void dispose() {
+    _stopAutoRefresh();
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _loadChat() {
+    // Foydalanuvchi authentificated bo'lishi shart emas
+    // Har safar chatga kirganda xabarlarni yuklash
+    context.read<ChatBloc>().add(GetChatsEvent());
+  }
+
+  void _startAutoRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (mounted) {
+        context.read<ChatBloc>().add(GetChatsEvent(isAutoRefresh: true));
+      }
+    });
+  }
+
+  void _stopAutoRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
   }
 
   void _scrollToBottom() {
@@ -86,12 +107,14 @@ class _SupportChatPageState extends State<SupportChatPage> {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: _refreshChat,
+            onPressed: () {
+              context.read<ChatBloc>().add(GetChatsEvent());
+            },
             icon: SvgPicture.asset(
               AppSvg.icRefresh,
               width: 24.0,
               height: 24.0,
-              colorFilter: ColorFilter.mode(
+              colorFilter: const ColorFilter.mode(
                 AppColors.mainColor,
                 BlendMode.srcIn,
               ),
@@ -199,13 +222,20 @@ class _SupportChatPageState extends State<SupportChatPage> {
           child: BlocConsumer<ChatBloc, ChatState>(
             listener: (context, state) {
               if (state is ChatSuccess) {
-                _scrollToBottom();
+                if (_isFirstLoad) {
+                  _isFirstLoad = false;
+                  _scrollToBottom();
+                } else {
+                  // Yangi xabar kelganda scroll
+                  _scrollToBottom();
+                }
               } else if (state is ChatFailure) {
                 context.showSnackBarMessage(state.error);
               }
             },
             builder: (context, state) {
-              if (state is ChatLoading && state is! ChatSuccess) {
+              // Faqat birinchi yuklashda loading ko'rsat
+              if (state is ChatLoading && _isFirstLoad) {
                 return const Center(child: CircularProgressIndicator());
               }
 
@@ -292,13 +322,5 @@ class _SupportChatPageState extends State<SupportChatPage> {
     final d1 = DateTime.fromMillisecondsSinceEpoch(ts1);
     final d2 = DateTime.fromMillisecondsSinceEpoch(ts2);
     return d1.year == d2.year && d1.month == d2.month && d1.day == d2.day;
-  }
-
-  Future<void> _refreshChat() async {
-    final authState = context.read<AuthBloc>().state;
-    if (authState is AuthenticatedState) {
-      context.read<ChatBloc>().add(GetChatsEvent());
-      await Future.delayed(const Duration(seconds: 1));
-    }
   }
 }

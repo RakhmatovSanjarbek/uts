@@ -1,55 +1,86 @@
+// lib/features/chat/bloc/chat_bloc.dart
+import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uts_cargo/domain/repositories/chat_repository.dart';
-
 import '../../../data/models/chat_model/chat_model.dart';
 import '../../../data/models/chat_model/chat_response.dart';
 
 part 'chat_event.dart';
-
 part 'chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatRepository repository;
+  Timer? _refreshTimer;
 
   ChatBloc(this.repository) : super(ChatInitial()) {
-    on<GetChatsEvent>((event, emit) async {
-      emit(ChatLoading());
+    on<GetChatsEvent>(_onGetChats);
+    on<SendChatMessageEvent>(_onSendMessage);
+    on<StartAutoRefreshEvent>(_onStartAutoRefresh);
+    on<StopAutoRefreshEvent>(_onStopAutoRefresh);
+  }
+
+  Future<void> _onGetChats(GetChatsEvent event, Emitter<ChatState> emit) async {
+    // Agar auto-refresh bo'lmasa va state ChatSuccess bo'lsa, loading ko'rsat
+    if (!event.isAutoRefresh && state is! ChatSuccess) {
+      emit(ChatLoading(isAutoRefresh: false));
+    }
+
+    try {
+      final res = await repository.getChats();
+      emit(ChatSuccess(res));
+    } catch (e) {
+      if (!event.isAutoRefresh) {
+        emit(ChatFailure(_mapErrorToMessage(e)));
+      }
+    }
+  }
+
+  Future<void> _onSendMessage(SendChatMessageEvent event, Emitter<ChatState> emit) async {
+    final currentState = state;
+    if (currentState is ChatSuccess) {
       try {
-        final res = await repository.getChats();
-        emit(ChatSuccess(res));
+        await repository.sendMessage(
+          message: event.message,
+          image: event.image,
+        );
+
+        // Optimistik yangilash
+        final myNewMsg = ChatModel(
+          message: event.message,
+          image: event.image?.path,
+          isFromAdmin: false,
+          timestampMs: DateTime.now().millisecondsSinceEpoch,
+          senderType: 'Client',
+        );
+        final List<ChatModel> updatedList = [
+          ...currentState.response.chats,
+          myNewMsg,
+        ];
+        emit(ChatSuccess(currentState.response.copyWith(chats: updatedList)));
+
+        // Serverdan yangilangan ma'lumotlarni olish
+        add(GetChatsEvent(isAutoRefresh: true));
       } catch (e) {
         emit(ChatFailure(_mapErrorToMessage(e)));
       }
-    });
-    on<SendChatMessageEvent>((event, emit) async {
-      final currentState = state;
-      if (currentState is ChatSuccess) {
-        try {
-          await repository.sendMessage(
-            message: event.message,
-            image: event.image,
-          );
-          final myNewMsg = ChatModel(
-            message: event.message,
-            image: event.image?.path,
-            isFromAdmin: false,
-            timestampMs: DateTime.now().millisecondsSinceEpoch,
-            senderType: 'Client',
-          );
-          final List<ChatModel> updatedList = [
-            ...currentState.response.chats,
-            myNewMsg,
-          ];
-          emit(ChatSuccess(currentState.response.copyWith(chats: updatedList)));
-        } catch (e) {
-          emit(ChatFailure(_mapErrorToMessage(e)));
-        }
+    }
+  }
+
+  void _onStartAutoRefresh(StartAutoRefreshEvent event, Emitter<ChatState> emit) {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (!isClosed) {
+        add(GetChatsEvent(isAutoRefresh: true));
       }
     });
+  }
+
+  void _onStopAutoRefresh(StopAutoRefreshEvent event, Emitter<ChatState> emit) {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
   }
 
   String _mapErrorToMessage(dynamic e) {
@@ -63,5 +94,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       return "Tarmoq xatoligi yuz berdi";
     }
     return e.toString();
+  }
+
+  @override
+  Future<void> close() {
+    _refreshTimer?.cancel();
+    return super.close();
   }
 }
