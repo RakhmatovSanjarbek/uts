@@ -48,7 +48,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         );
 
         // Optimistik yangilash
-
         final myNewMsg = ChatModel(
           message: event.message,
           image: event.image?.path,
