@@ -105,7 +105,7 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF141E30), Color(0xFF243B55)]),
+        gradient: const LinearGradient(colors: [AppColors.mainColor, Color(0xFF243B55)]),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(

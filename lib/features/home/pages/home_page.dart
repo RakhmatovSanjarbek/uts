@@ -8,6 +8,7 @@ import 'package:uts_cargo/core/utils/map_service.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/home/bloc/warehouse_bloc.dart';
 import 'package:uts_cargo/features/home/info_bloc/info_bloc.dart';
+import 'package:uts_cargo/features/home/pages/all_warehouse_page.dart';
 import 'package:uts_cargo/features/home/widgets/w_basic_management.dart';
 import 'package:uts_cargo/features/home/widgets/w_contact_bottom_sheet.dart';
 import 'package:uts_cargo/features/home/widgets/w_home_toolbar.dart';
@@ -30,6 +31,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   InfoModel? _cachedInfo;
   String? _userId;
+  String? _fullName;
   List<ArrivedGroupResponse> _lastWarehouseData = [];
   bool _isRefreshing = false;
   bool _isLoading = true;
@@ -302,6 +304,7 @@ class _HomePageState extends State<HomePage> {
             if (state is ProfileSuccess) {
               setState(() {
                 _userId = state.model.userId;
+                _fullName="${state.model.firstName} ${state.model.lastName}";
               });
             }
           },
@@ -309,7 +312,7 @@ class _HomePageState extends State<HomePage> {
         BlocListener<WarehouseBloc, WarehouseState>(
           listener: (context, state) {
             if (state is WarehouseLoaded) {
-              setState(() => _lastWarehouseData = state.groups ?? []);
+              setState(() => _lastWarehouseData = state.groups);
             }
           },
         ),
@@ -322,6 +325,7 @@ class _HomePageState extends State<HomePage> {
 
           final List<ArrivedGroupResponse> data = _lastWarehouseData;
           return _buildMainContentBody(
+
             context,
             data,
             authState,
@@ -369,12 +373,41 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
               const SizedBox(height: 16),
-              Text(
-                AppStrings.orders,
-                style: const TextStyle(color: AppColors.blackColor, fontSize: 18.0, fontWeight: FontWeight.bold),
-              ).paddingOnly(left: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    AppStrings.orders,
+                    style: const TextStyle(color: AppColors.blackColor, fontSize: 18.0, fontWeight: FontWeight.bold),
+                  ).paddingOnly(left: 16.0),
+                  TextButton(onPressed: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (_)=>AllWarehousePage(fullName: _fullName.toString(), userID: _userId.toString(),)));
+                  }, child: Text("Barchasi",style: TextStyle(fontWeight: FontWeight.bold),))
+                ],
+              ).paddingOnly(right: 16.0),
               const SizedBox(height: 12),
-              WWarehouse(model: groups),
+              Builder(
+                builder: (context) {
+                  final activeOrders = groups.where((item) => item.paymentStatus != "Topshirildi").toList();
+
+                  if (activeOrders.isEmpty) {
+                    return Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Text(AppStrings.noOrdersYet, style: TextStyle(color: Colors.grey)),
+                      ),
+                    );
+                  }
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: activeOrders.length,
+                    itemBuilder: (context, index) {
+                      return WWarehouse(model: activeOrders[index], fullName: _fullName.toString(), userID: _userId.toString(),);
+                    },
+                  );
+                },
+              ),
               const SizedBox(height: 16),
               WBasicManagement(
                 onVideoPressed: () => Navigator.pushNamed(context, "/video"),
