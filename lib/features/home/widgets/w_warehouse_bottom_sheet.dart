@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
-import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
@@ -88,7 +88,7 @@ class WWarehouseBottomSheet extends StatelessWidget {
                                 "收货人: UT-$userId\n电话: ${model.xitoyAvia.phone}\n安市: ${model.xitoyAvia.address} UT-$userId",
                           ),
                         );
-                        context.showSnackBarMessage("Manzil nusxa olindi");
+                        context.showSnackBarMessage(AppStrings.addressCopied);
                         Navigator.pop(context);
                       },
                       icon: SvgPicture.asset(AppSvg.icCopy),
@@ -150,7 +150,7 @@ class WWarehouseBottomSheet extends StatelessWidget {
                             "收货人: A-$userId\n电话: ${model.xitoyAvto.phone}\n安市: ${model.xitoyAvto.address} A-$userId",
                           ),
                         );
-                        context.showSnackBarMessage("Manzil nusxa olindi");
+                        context.showSnackBarMessage(AppStrings.addressCopied);
                         Navigator.pop(context);
                       },
                       icon: SvgPicture.asset(AppSvg.icCopy),

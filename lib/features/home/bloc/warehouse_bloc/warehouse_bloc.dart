@@ -2,8 +2,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../data/models/warehouse/arrived_group_response.dart';
-import '../../../domain/repositories/warehouse_repository.dart';
+import '../../../../data/models/warehouse/arrived_group_response.dart';
+import '../../../../domain/repositories/warehouse_repository.dart';
 
 part 'warehouse_event.dart';
 part 'warehouse_state.dart';

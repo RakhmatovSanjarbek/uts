@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
@@ -133,7 +132,7 @@ class WUserInfo extends StatelessWidget {
   }
 
   String _formatPhoneNumber(String phone) {
-    var phones = "+$phone";
+    var phones = phone;
 
     final code = phones.substring(0, 4);
     final operator = phones.substring(4, 6);

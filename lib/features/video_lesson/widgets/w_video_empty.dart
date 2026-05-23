@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 
 class WVideoEmpty extends StatelessWidget {
@@ -22,7 +23,7 @@ class WVideoEmpty extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Hozircha videolar mavjud emas',
+            AppStrings.noVideosYet,
             style: TextStyle(
               color: AppColors.whiteColor,
               fontSize: 18,
@@ -31,7 +32,7 @@ class WVideoEmpty extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tez orada yangi darslar qo\'shiladi',
+            AppStrings.newLessonsSoon,
             style: TextStyle(
               color: AppColors.whiteColor.withOpacity(0.6),
               fontSize: 14,

@@ -12,6 +12,7 @@ import 'package:equatable/equatable.dart';
 import '../../../data/models/user_model/user_model.dart';
 
 part 'auth_event.dart';
+
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
@@ -27,9 +28,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onCheckAuthStatus(
-      CheckAuthStatusEvent event,
-      Emitter<AuthState> emit,
-      ) async {
+    CheckAuthStatusEvent event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
 
     final token = await AuthService.getToken();
@@ -47,10 +48,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(TokenExistsState(token: token));
   }
 
-  Future<void> _onSignIn(
-      SignInEvent event,
-      Emitter<AuthState> emit,
-      ) async {
+  Future<void> _onSignIn(SignInEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       final res = await repository.signIn(SignInModel(phone: event.phone));
@@ -59,7 +57,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (e.response?.statusCode == 404) {
         emit(AuthNeedRegister(event.phone));
       } else {
-        final message = e.response?.data["message"]?.toString() ?? "Xatolik yuz berdi";
+        final message =
+            e.response?.data["message"]?.toString() ?? "Xatolik yuz berdi";
         emit(AuthFailure(message));
       }
     } catch (e) {
@@ -67,10 +66,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onSignUp(
-      SignUpEvent event,
-      Emitter<AuthState> emit,
-      ) async {
+  Future<void> _onSignUp(SignUpEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       final res = await repository.signUp(event.model);
@@ -80,14 +76,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onOtp(
-      OtpEvent event,
-      Emitter<AuthState> emit,
-      ) async {
+  Future<void> _onOtp(OtpEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       final res = await repository.otp(
-        OtpModel(phone: event.phone, code: event.code),
+        OtpModel(
+          phone: event.phone,
+          code: event.code,
+          fcmToken: event.fcmToken,
+        ),
       );
 
       if (res.token != null) {
@@ -105,19 +102,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onLogout(
-      LogoutEvent event,
-      Emitter<AuthState> emit,
-      ) async {
+  Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
     await AuthService.clearAuth();
     emit(UnauthenticatedState());
   }
 
   // features/auth/bloc/auth_bloc.dart
   Future<void> _onUpdateUser(
-      UpdateUserEvent event,
-      Emitter<AuthState> emit,
-      ) async {
+    UpdateUserEvent event,
+    Emitter<AuthState> emit,
+  ) async {
     final token = await AuthService.getToken();
 
     if (token == null) {
@@ -144,8 +138,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             data['error']?.toString() ??
             "Serverda xatolik yuz berdi";
       }
-      if (e.type == DioExceptionType.connectionTimeout) return "Internet aloqasi juda sekin";
-      if (e.type == DioExceptionType.connectionError) return "Internet bilan aloqa yo'q";
+      if (e.type == DioExceptionType.connectionTimeout)
+        return "Internet aloqasi juda sekin";
+      if (e.type == DioExceptionType.connectionError)
+        return "Internet bilan aloqa yo'q";
       return "Tarmoq xatoligi yuz berdi";
     }
     return e.toString();

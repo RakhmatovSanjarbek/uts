@@ -3,11 +3,13 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
+    // START: FlutterFire Configuration
+    id("com.google.gms.google-services")
+    // END: FlutterFire Configuration
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// 1. O'zgaruvchilarni Kotlin uslubida e'lon qilish
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 
@@ -16,7 +18,6 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    // Siz o'zgartirgan yangi nomlar
     namespace = "uts.cargo.uz"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
@@ -24,6 +25,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true  // ✅ qo'shildi
     }
 
     kotlinOptions {
@@ -34,11 +36,12 @@ android {
         applicationId = "uts.cargo.uz"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 2
+        versionCode = 3
         versionName = flutter.versionName
+
+        multiDexEnabled = true
     }
 
-    // 2. Imzo sozlamalarini to'g'ri ulash
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String?
@@ -50,9 +53,7 @@ android {
 
     buildTypes {
         getByName("release") {
-            // Mana bu yerda release imzosini ulaym3iz
             signingConfig = signingConfigs.getByName("release")
-
             isMinifyEnabled = false
             isShrinkResources = false
         }
@@ -65,4 +66,8 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

@@ -4,16 +4,19 @@ import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 
 class WQRCodeBottomSheet extends StatelessWidget {
+  final String title;
   final String qrData;
-  const WQRCodeBottomSheet({super.key, required this.qrData});
+
+  const WQRCodeBottomSheet({
+    super.key,
+    required this.qrData,
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
     final qrDecoration = const PrettyQrDecoration(
-      shape: PrettyQrSmoothSymbol(
-        color: AppColors.mainColor,
-        roundFactor: 1.0,
-      ),
+      shape: PrettyQrSmoothSymbol(color: AppColors.mainColor, roundFactor: 1.0),
       image: PrettyQrDecorationImage(
         image: AssetImage('assets/images/qr_logo.png'),
         scale: 0.3,
@@ -45,7 +48,7 @@ class WQRCodeBottomSheet extends StatelessWidget {
           const SizedBox(height: 24.0),
 
           Text(
-            AppStrings.yourIdNumber,
+            title,
             style: TextStyle(
               color: AppColors.blackColor,
               fontSize: 18.0,

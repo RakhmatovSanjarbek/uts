@@ -9,8 +9,17 @@ import '../../../../data/models/order_model/order_model.dart';
 
 class WOrderList extends StatelessWidget {
   final List<OrderModel> orders;
+  final ScrollController? scrollController;
+  final bool isLoadingMore;
+  final bool hasMore;
 
-  const WOrderList({super.key, required this.orders});
+  const WOrderList({
+    super.key,
+    required this.orders,
+    this.scrollController,
+    this.isLoadingMore = false,
+    this.hasMore = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,22 +29,31 @@ class WOrderList extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Lottie.asset('assets/lottie/empty.json', width: 200, height: 200),
-            Text(
-              AppStrings.ordersNotFound,
-              style: TextStyle(color: AppColors.grayColor, fontSize: 16),
-            ),
+            Text(AppStrings.ordersNotFound,
+                style: const TextStyle(color: AppColors.grayColor, fontSize: 16)),
           ],
         ),
       );
     }
 
     return ListView.builder(
-      itemCount: orders.length,
+      controller: scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: orders.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
-        final order = orders[index];
-        return _buildOrderItem(order);
+        if (index == orders.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: AppColors.mainColor,
+                strokeWidth: 2,
+              ),
+            ),
+          );
+        }
+        return _buildOrderItem(orders[index]);
       },
     );
   }
@@ -58,36 +76,41 @@ class WOrderList extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left side
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "${AppStrings.trackCode}: ",
-                style: TextStyle(fontSize: 12, color: AppColors.grayColor),
+              Row(
+                children: [
+                  Text("Reys: ",
+                      style: const TextStyle(fontSize: 12, color: AppColors.grayColor)),
+                  Text(order.resCode,
+                      style: const TextStyle(
+                        color: AppColors.blackColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      )),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                order.trackCode,
-                style: const TextStyle(
-                  color: AppColors.blackColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Text("${AppStrings.trackCode}: ",
+                      style: const TextStyle(fontSize: 12, color: AppColors.grayColor)),
+                  Text(order.trackCode,
+                      style: const TextStyle(
+                        color: AppColors.blackColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      )),
+                ],
               ),
             ],
           ),
-
-          // Right side
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              // Status badge
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: OrderStatusMapper.color(order.status).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -97,12 +120,9 @@ class WOrderList extends StatelessWidget {
                   children: [
                     SvgPicture.asset(
                       OrderStatusMapper.icon(order.status),
-                      width: 18,
-                      height: 18,
+                      width: 18, height: 18,
                       colorFilter: ColorFilter.mode(
-                        OrderStatusMapper.color(order.status),
-                        BlendMode.srcIn,
-                      ),
+                          OrderStatusMapper.color(order.status), BlendMode.srcIn),
                     ),
                     const SizedBox(width: 6),
                     Text(
@@ -117,13 +137,9 @@ class WOrderList extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              // Date
               Text(
                 _formatDate(order.deliveredAt ?? order.createdAt),
-                style: const TextStyle(
-                  color: AppColors.grayColor,
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: AppColors.grayColor, fontSize: 12),
               ),
             ],
           ),

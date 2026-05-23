@@ -7,7 +7,7 @@ import '../../../core/utils/date_utils.dart';
 class WDateDivider extends StatelessWidget {
   final int timestamp;
 
-  const WDateDivider({required this.timestamp});
+  const WDateDivider({super.key, required this.timestamp});
 
   @override
   Widget build(BuildContext context) {

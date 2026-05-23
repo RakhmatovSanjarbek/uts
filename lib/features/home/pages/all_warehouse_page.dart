@@ -1,16 +1,16 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
-import 'package:uts_cargo/features/home/bloc/warehouse_bloc.dart';
+import 'package:uts_cargo/features/home/bloc/warehouse_bloc/warehouse_bloc.dart';
+import 'package:uts_cargo/features/home/pages/warehouse_page.dart';
 import 'package:uts_cargo/features/home/widgets/w_warehouse.dart';
 
 class AllWarehousePage extends StatefulWidget {
+  final String phoneNumber;
   final String fullName;
   final String userID;
 
@@ -18,6 +18,7 @@ class AllWarehousePage extends StatefulWidget {
     super.key,
     required this.fullName,
     required this.userID,
+    required this.phoneNumber,
   });
 
   @override
@@ -56,14 +57,14 @@ class _AllWarehousePageState extends State<AllWarehousePage> {
         ],
       ),
       body: BlocConsumer<WarehouseBloc, WarehouseState>(
-        listener: (BuildContext context, WarehouseState state) {
+        listener: (context, state) {
           if (state is WarehouseLoading) {
             Center(child: CircularProgressIndicator());
           } else if (state is WarehouseError) {
             context.showSnackBarMessage(state.message);
           }
         },
-        builder: (BuildContext context, WarehouseState state) {
+        builder: (context, state) {
           if (state is WarehouseLoaded) {
             if (state.groups.isNotEmpty) {
               return ListView.builder(
@@ -71,8 +72,19 @@ class _AllWarehousePageState extends State<AllWarehousePage> {
                 itemBuilder: (context, index) {
                   return WWarehouse(
                     model: state.groups[index],
-                    fullName: widget.fullName,
-                    userID: widget.userID,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => WarehousePage(
+                            model: state.groups[index],
+                            phoneNumber: widget.phoneNumber,
+                            fullName: widget.fullName,
+                            userID: widget.userID,
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               );

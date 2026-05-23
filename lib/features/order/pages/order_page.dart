@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
@@ -23,10 +24,9 @@ class OrderPage extends StatefulWidget {
 
 class _OrderPageState extends State<OrderPage> {
   String selectedStatus = "Barchasi";
-  List<OrderModel> orders = [];
-  List<OrderModel> filteredOrders = [];
   final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
+  final ScrollController _scrollController = ScrollController();
+  Timer? _debounce;
   UserModel? _userModel;
 
   final List<String> categories = [
@@ -40,66 +40,38 @@ class _OrderPageState extends State<OrderPage> {
   @override
   void initState() {
     super.initState();
-    _checkAndLoadOrders();
-    _searchController.addListener(_onSearchChanged);
+    _scrollController.addListener(_onScroll);
   }
-
-  void _checkAndLoadOrders() {
-    final authState = context.read<AuthBloc>().state;
-    if (authState is AuthenticatedState) {
-      _userModel = authState.user;
-      context.read<OrderBloc>().add(GetOrderEvent());
-    } else if (authState is RejectedState) {
-      _userModel = authState.user;
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      context.read<OrderBloc>().add(LoadMoreOrdersEvent());
     }
   }
-
-  void _loadOrders() {
-    context.read<OrderBloc>().add(GetOrderEvent());
-  }
-
-  void _onSearchChanged() {
-    setState(() {
-      _searchQuery = _searchController.text;
-      _filterOrders();
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      context.read<OrderBloc>().add(SearchOrderEvent(query));
     });
-  }
-
-  void _filterOrders() {
-    var statusFiltered = selectedStatus == "Barchasi"
-        ? orders
-        : orders.where((e) => e.status == selectedStatus).toList();
-
-    if (_searchQuery.isNotEmpty) {
-      filteredOrders = statusFiltered.where((order) {
-        return order.trackCode
-            .toLowerCase()
-            .contains(_searchQuery.toLowerCase());
-      }).toList();
-    } else {
-      filteredOrders = statusFiltered;
-    }
   }
 
   void _updateSelectedStatus(String status) {
-    setState(() {
-      selectedStatus = status;
-      _filterOrders();
-    });
+    setState(() => selectedStatus = status);
+    context.read<OrderBloc>().add(FilterOrderByStatusEvent(status));
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(_onSearchChanged);
+    _debounce?.cancel();
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _refreshOrders() async {
-    final authState = context.read<AuthBloc>().state;
-    if (authState is AuthenticatedState) {
-      context.read<OrderBloc>().add(GetOrderEvent());
-    }
+    _searchController.clear();
+    setState(() => selectedStatus = 'Barchasi');
+    context.read<OrderBloc>().add(GetOrderEvent());
   }
 
   @override
@@ -111,7 +83,7 @@ class _OrderPageState extends State<OrderPage> {
         final bool isRejected = authState is RejectedState;
         final bool isUnauthenticated = authState is UnauthenticatedState;
 
-        if (isRejected && authState is RejectedState) {
+        if (isRejected) {
           _userModel = authState.user;
         }
 
@@ -136,18 +108,12 @@ class _OrderPageState extends State<OrderPage> {
       onPressed = () => Navigator.pushNamed(context, "/login");
     } else if (isPending) {
       message = "Akkauntingiz tekshirilmoqda. Tasdiqlangandan keyin buyurtmalaringizni ko'rishingiz mumkin";
-      buttonText = "";
-      onPressed = null;
     } else if (isRejected) {
       message = "Akkauntingiz rad etilgan. Buyurtmalaringizni ko'rish uchun qayta ro'yxatdan o'ting";
       buttonText = "Qayta ro'yxatdan o'tish";
       onPressed = () {
         if (_userModel != null && _userModel!.phone.isNotEmpty) {
-          Navigator.pushNamed(
-            context,
-            "/register",
-            arguments: _userModel!.phone,
-          );
+          Navigator.pushNamed(context, "/register", arguments: _userModel!.phone);
         }
       };
     }
@@ -158,24 +124,11 @@ class _OrderPageState extends State<OrderPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset(
-              AppSvg.icBox,
-              width: 80,
-              height: 80,
-              colorFilter: const ColorFilter.mode(
-                AppColors.grayColor,
-                BlendMode.srcIn,
-              ),
-            ),
+            SvgPicture.asset(AppSvg.icBox, width: 80, height: 80,
+                colorFilter: const ColorFilter.mode(AppColors.grayColor, BlendMode.srcIn)),
             const SizedBox(height: 24),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.grayColor,
-              ),
-            ),
+            Text(message, textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16, color: AppColors.grayColor)),
             if (buttonText.isNotEmpty && onPressed != null) ...[
               const SizedBox(height: 24),
               ElevatedButton(
@@ -184,9 +137,7 @@ class _OrderPageState extends State<OrderPage> {
                   backgroundColor: AppColors.mainColor,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: Text(buttonText),
               ),
@@ -200,166 +151,134 @@ class _OrderPageState extends State<OrderPage> {
   Widget _buildAuthenticatedContent() {
     return BlocConsumer<OrderBloc, OrderState>(
       listener: (context, state) {
-        if (state is OrderFailure) {
-          context.showSnackBarMessage(state.error);
-        }
+        if (state is OrderFailure) context.showSnackBarMessage(state.error);
       },
       builder: (context, state) {
-        if (state is OrderLoading && orders.isEmpty) {
+        if (state is OrderLoading) {
           return const Center(
-            child: CircularProgressIndicator(
-              color: AppColors.mainColor,
-            ),
+            child: CircularProgressIndicator(color: AppColors.mainColor),
           );
         }
-
-        if (state is OrderFailure && orders.isEmpty) {
+        if (state is OrderFailure) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  state.error,
-                  style: const TextStyle(color: AppColors.grayColor),
-                ),
+                Text(state.error, style: const TextStyle(color: AppColors.grayColor)),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: _loadOrders,
+                  onPressed: _refreshOrders,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.mainColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Qayta urinish'),
+                  child: const Text('Qayta urinish', style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
           );
         }
+        List<OrderModel> orders = [];
+        bool isLoadingMore = false;
+        int totalCount = 0;
+        bool hasMore = false;
 
         if (state is OrderSuccess) {
-          orders = state.model;
-          _filterOrders();
+          orders = state.orders;
+          totalCount = state.totalCount;
+          hasMore = state.hasMore;
+        } else if (state is OrderLoadingMore) {
+          orders = state.current.orders;
+          totalCount = state.current.totalCount;
+          hasMore = state.current.hasMore;
+          isLoadingMore = true;
         }
 
         return Column(
           children: [
-            // App Bar
+            // AppBar
             Padding(
-              padding: const EdgeInsets.only(
-                top: 48,
-                left: 16,
-                right: 16,
-                bottom: 8,
-              ),
+              padding: const EdgeInsets.only(top: 48, left: 16, right: 16, bottom: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    AppStrings.orders,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.blackColor,
-                    ),
-                  ),
+                  Text(AppStrings.orders,
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.blackColor)),
                   IconButton(
                     onPressed: _refreshOrders,
-                    icon: SvgPicture.asset(
-                      AppSvg.icRefresh,
-                      width: 24,
-                      height: 24,
-                      colorFilter: const ColorFilter.mode(
-                        AppColors.mainColor,
-                        BlendMode.srcIn,
-                      ),
-                    ),
+                    icon: SvgPicture.asset(AppSvg.icRefresh, width: 24, height: 24,
+                        colorFilter: const ColorFilter.mode(AppColors.mainColor, BlendMode.srcIn)),
                   ),
                 ],
               ),
             ),
 
-            // Search Bar
+            // Search
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: WSearchBar(
-                controller: _searchController,
-                onSearch: (query) {},
-                hintText: AppStrings.searchByTrack,
+              child: Focus(
+                canRequestFocus: false,
+                child: WSearchBar(
+                  controller: _searchController,
+                  onSearch: _onSearchChanged,
+                  hintText: AppStrings.searchByTrack,
+                ),
               ),
             ),
-
             const SizedBox(height: 12),
 
-            // Category Bar
+            // Category filter
             WCategoryBar(
               categories: categories,
               selectedStatus: selectedStatus,
               onStatusSelected: _updateSelectedStatus,
             ),
-
             const SizedBox(height: 8),
 
-            // Results info
-            if (_searchQuery.isNotEmpty || selectedStatus != "Barchasi")
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${filteredOrders.length} ${AppStrings.orderCount}',
-                      style: const TextStyle(
-                        color: AppColors.grayColor,
-                        fontSize: 13,
-                      ),
-                    ),
-                    if (_searchQuery.isNotEmpty)
-                      GestureDetector(
-                        onTap: () {
-                          _searchController.clear();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.grayColor200,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.close,
-                                size: 16,
-                                color: AppColors.grayColor,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                AppStrings.clear,
-                                style: TextStyle(
-                                  color: AppColors.grayColor,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Jami: $totalCount ta yuk',
+                      style: const TextStyle(color: AppColors.grayColor, fontSize: 13)),
+                  if (_searchController.text.isNotEmpty)
+                    GestureDetector(
+                      onTap: () {
+                        _searchController.clear();
+                        _onSearchChanged('');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.grayColor200,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.close, size: 16, color: AppColors.grayColor),
+                            const SizedBox(width: 4),
+                            Text(AppStrings.clear,
+                                style: const TextStyle(color: AppColors.grayColor, fontSize: 12)),
+                          ],
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
-
+            ),
             const SizedBox(height: 8),
 
-            // Orders List
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _refreshOrders,
                 color: AppColors.mainColor,
-                child: WOrderList(orders: filteredOrders),
+                child: WOrderList(
+                  orders: orders,
+                  scrollController: _scrollController,
+                  isLoadingMore: isLoadingMore,
+                  hasMore: hasMore,
+                ),
               ),
             ),
           ],

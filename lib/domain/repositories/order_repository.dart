@@ -1,5 +1,9 @@
-import 'package:uts_cargo/data/models/order_model/order_model.dart';
+import 'package:uts_cargo/data/datasource/order_remote_data_source.dart';
 
 abstract class OrderRepository {
-  Future<List<OrderModel>> getOrder();
+  Future<OrderListModel> getOrders({
+    int page = 1,
+    String? search,
+    String? status,
+  });
 }

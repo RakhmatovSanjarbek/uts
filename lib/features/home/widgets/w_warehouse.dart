@@ -2,34 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:uts_cargo/core/constants/constants.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
-import 'package:uts_cargo/features/home/pages/warehouse_page.dart';
 
 import '../../../data/models/warehouse/arrived_group_response.dart';
 
 class WWarehouse extends StatelessWidget {
-  final String fullName;
-  final String userID;
+  final VoidCallback onTap;
   final ArrivedGroupResponse model;
 
   const WWarehouse({
     super.key,
     required this.model,
-    required this.fullName,
-    required this.userID,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (model.paymentStatus == "Topshirildi") {
-      return const SizedBox.shrink();
-    }
 
     final statusTheme = _getStatusTheme(model.paymentStatus);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: InkWell(
-        onTap: () => _handleNavigation(context, model),
+        onTap: onTap,
         borderRadius: BorderRadius.circular(20.0),
         child: Container(
           decoration: BoxDecoration(
@@ -65,7 +59,7 @@ class WWarehouse extends StatelessWidget {
                           ),
                           const SizedBox(height: 4.0),
                           Text(
-                            "${AppStrings.weight} ${model.totalWeight} kg",
+                            "${AppStrings.weight} ${model.totalWeight} ${AppStrings.kg}",
                             style: TextStyle(
                               color: AppColors.grayColor,
                               fontSize: 13.0,
@@ -98,13 +92,6 @@ class WWarehouse extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  void _handleNavigation(BuildContext context, ArrivedGroupResponse item) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => WarehousePage(model: model, fullName: fullName, userID: userID,)),
     );
   }
 

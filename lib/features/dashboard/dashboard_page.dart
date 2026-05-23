@@ -1,4 +1,4 @@
-// lib/features/dashboard/dashboard_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -12,6 +12,7 @@ import 'package:uts_cargo/features/support/pages/support_chat_page.dart';
 
 import '../../core/constants/constants.dart';
 import '../../core/svg/app_svg.dart';
+import '../order/bloc/order_bloc.dart';
 import '../order/pages/order_page.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -23,17 +24,17 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   int _currentIndex = 0;
-  late final List<Widget> _screens;
+
+  List<Widget> get _screens => [
+    const HomePage(),
+    const OrderPage(),
+    SupportChatPage(isActive: _currentIndex == 2),
+    const ProfilePage(),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _screens = [
-      const HomePage(),
-      const OrderPage(),
-      const SupportChatPage(),
-      const ProfilePage(),
-    ];
     _loadProfileIfNeeded();
   }
 
@@ -48,6 +49,12 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
+        if (state is AuthenticatedState) {
+          final orderState = context.read<OrderBloc>().state;
+          if (orderState is OrderInitial) {
+            context.read<OrderBloc>().add(GetOrderEvent());
+          }
+        }
         if (state is UnauthenticatedState) {
           if (_currentIndex == 3) {
             setState(() {
@@ -68,12 +75,12 @@ class _DashboardPageState extends State<DashboardPage> {
           backgroundColor: AppColors.whiteColor,
           selectedItemColor: AppColors.mainColor,
           unselectedItemColor: AppColors.grayColor,
-          selectedLabelStyle: TextStyle(
+          selectedLabelStyle: const TextStyle(
             color: AppColors.mainColor,
             fontFamily: Constants.exo,
             fontWeight: FontWeight.bold,
           ),
-          unselectedLabelStyle: TextStyle(
+          unselectedLabelStyle: const TextStyle(
             color: AppColors.grayColor,
             fontFamily: Constants.exo,
             fontWeight: FontWeight.bold,

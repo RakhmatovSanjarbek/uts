@@ -50,11 +50,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
           if (state is CalculatorLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is CalculatorLoaded) {
-            // Bo'sh listni tekshirish
             if (state.calculations.isEmpty) {
-              return const Center(
+              return Center(
                 child: Text(
-                  "Hozircha ma'lumot yo'q",
+                  AppStrings.noDataYet,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -114,8 +113,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                   borderRadius: BorderRadius.circular(8.0),
                                   color: Colors.green,
                                 ),
-                                child: const Text(
-                                  "Javob berildi",
+                                child: Text(
+                                  AppStrings.answered,
                                   style: TextStyle(
                                     color: AppColors.whiteColor,
                                     fontSize: 10.0,
@@ -128,8 +127,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                   borderRadius: BorderRadius.circular(8.0),
                                   color: Colors.orange,
                                 ),
-                                child: const Text(
-                                  "Kutilmoqda",
+                                child: Text(
+                                  AppStrings.pending,
                                   style: TextStyle(
                                     color: AppColors.whiteColor,
                                     fontSize: 10.0,
@@ -176,7 +175,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
           } else if (state is CalculatorError) {
             return Center(child: Text(state.message));
           }
-          return const Center(child: Text("Hozircha ma'lumot yo'q"));
+          return Center(child: Text(AppStrings.noDataYet));
         },
       ),
     );

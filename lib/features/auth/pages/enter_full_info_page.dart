@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
-import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/data/models/auth_model/sign_up_model.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
@@ -40,7 +40,7 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
         tinNumber.text.trim().length == 17 &&
         serialNumber.text.trim().length == 10 &&
         dateNumber.text.trim().length == 10 &&
-        address.text.trim().length >= 15 &&
+        address.text.trim().length >= 5 &&
         passportFront != null &&
         passportBack != null;
   }
@@ -128,8 +128,7 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
             ),
             SizedBox(height: 20.0),
             Text(
-              "Passport nusxasini yuklang",
-              // AppStrings ga qo'shib qo'ysangiz ham bo'ladi
+              AppStrings.uploadPassport,
               style: TextStyle(
                 color: AppColors.blackColor,
                 fontSize: 18.0,
@@ -141,14 +140,14 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
               children: [
                 Expanded(
                   child: WImagePicker(
-                    title: "Old tomoni",
+                    title: AppStrings.frontSide,
                     image: passportFront,
                     onTap: () => _pickImage(true),
                   ),
                 ),
                 Expanded(
                   child: WImagePicker(
-                    title: "Orqa tomoni",
+                    title: AppStrings.backSide,
                     image: passportBack,
                     onTap: () => _pickImage(false),
                   ),

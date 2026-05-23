@@ -3,8 +3,17 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+
+    <!-- Qurilma o'chib-yonganda bildirishnoma xizmatini qayta yoqish uchun -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+    <!-- Xabar kelganda ekran o'chiq bo'lsa, tizimni qisqa muddat uyg'otish uchun -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Android 13 (API 33) va undan baland qurilmalarda push-bildirishnoma chiqarish ruxsati -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <application
         android:label="UTS"
         android:name="${applicationName}"
@@ -33,6 +42,10 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <intent-filter>
+                <action android:name="FLUTTER_NOTIFICATION_CLICK" />
+                <category android:name="android.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <activity
@@ -46,6 +59,14 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher" />
+
+        <!-- Standart bildirishnoma kanali IDsi (buni ixtiyoriy nomlash mumkin) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="uts_cargo_global_channel" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

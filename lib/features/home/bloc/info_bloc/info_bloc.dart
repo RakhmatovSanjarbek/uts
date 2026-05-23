@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../data/models/info_model/info_model.dart';
-import '../../../domain/repositories/info_repository.dart';
+import '../../../../data/models/info_model/info_model.dart';
+import '../../../../domain/repositories/info_repository.dart';
 
 part 'info_event.dart';
 part 'info_state.dart';

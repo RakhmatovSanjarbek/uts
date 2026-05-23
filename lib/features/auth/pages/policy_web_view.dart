@@ -24,11 +24,11 @@ class _PolicyWebViewState extends State<PolicyWebView> {
           widget.title,
           style: const TextStyle(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600),
         ),
-        backgroundColor: const Color(0xFFF8F8F8), // iOS style light grey
+        backgroundColor: const Color(0xFFF8F8F8),
         elevation: 0.5,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Color(0xFF024837)), // UTS Cargo rangida
+          icon: const Icon(Icons.close, color: Color(0xFF024837)),
           onPressed: () => Navigator.pop(context),
         ),
         bottom: _progress < 1.0
@@ -45,7 +45,7 @@ class _PolicyWebViewState extends State<PolicyWebView> {
       body: InAppWebView(
         initialUrlRequest: URLRequest(url: WebUri(widget.url)),
         initialSettings: InAppWebViewSettings(
-          allowsBackForwardNavigationGestures: true, // iOS'dagi orqaga surish (swipe)
+          allowsBackForwardNavigationGestures: true,
           transparentBackground: true,
           supportZoom: false,
         ),

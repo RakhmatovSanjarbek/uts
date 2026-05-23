@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pinput/pinput.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
-import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/auth/widgets/w_loading_button.dart';
+import '../../../core/service/fcm_service.dart';
 import '../../profile/bloc/profile_bloc.dart';
 
 class OtpVerificationPage extends StatefulWidget {
@@ -184,20 +185,16 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                     ),
                     _canResend
                         ? TextButton(
-                      onPressed: _canResend
-                          ? () {
+                      onPressed: () {
                         startTimer();
                         context.read<AuthBloc>().add(
                           SignInEvent(widget.phoneNumber),
                         );
-                      }
-                          : null,
+                      },
                       child: Text(
                         AppStrings.resend,
                         style: TextStyle(
-                          color: _canResend
-                              ? AppColors.mainColor
-                              : AppColors.grayColor,
+                          color: AppColors.mainColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 16.0,
                         ),
@@ -221,8 +218,14 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                   isOnPressed: isFull,
                   isLoading: isLoading,
                   onPressed: () {
+                    final fcmToken = FcmService.cachedToken ?? '';
+
                     context.read<AuthBloc>().add(
-                      OtpEvent(widget.phoneNumber, pinController.text),
+                      OtpEvent(
+                        widget.phoneNumber,
+                        pinController.text,
+                        fcmToken,
+                      ),
                     );
                   },
                 ),

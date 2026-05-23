@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "610781636727",
+    "project_id": "uts-cargo-37fb0",
+    "storage_bucket": "uts-cargo-37fb0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:610781636727:android:4afd80387ac678ca353e72",
+        "android_client_info": {
+          "package_name": "uts.cargo.uz"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYrfECVv8crPeVvmJfi2weIf2S8onTG9E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

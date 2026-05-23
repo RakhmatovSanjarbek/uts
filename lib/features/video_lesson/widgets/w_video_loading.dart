@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 
 class WVideoLoading extends StatelessWidget {
@@ -20,7 +21,7 @@ class WVideoLoading extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Videolar yuklanmoqda...',
+            AppStrings.videosLoading,
             style: TextStyle(
               color: AppColors.whiteColor,
               fontSize: 16,

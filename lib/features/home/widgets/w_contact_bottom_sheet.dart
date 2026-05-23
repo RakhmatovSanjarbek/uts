@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uts_cargo/core/extensions/snack_extension.dart';
+import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/data/models/info_model/info_model.dart';
 
@@ -7,11 +10,21 @@ class WContactBottomSheet extends StatelessWidget {
   final InfoModel model;
   const WContactBottomSheet({super.key, required this.model});
 
-  Future<void> _launchURL(String urlString) async {
-    final Uri url = Uri.parse(urlString);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('Havola ochilmadi: $urlString');
+  Future<void> _launchURL(BuildContext context, String urlString) async {
+    final uri = Uri.parse(urlString);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else if (context.mounted) {
+      context.showSnackBarMessage(AppStrings.linkNotOpened);
     }
+  }
+  Future<void> _openTelegram(BuildContext context, String username) async {
+    final box = context.findRenderObject() as RenderBox?;
+    await Share.share(
+      'https://t.me/$username',
+      sharePositionOrigin:
+      box != null ? box.localToGlobal(Offset.zero) & box.size : null,
+    );
   }
 
   @override
@@ -40,25 +53,25 @@ class WContactBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16.0),
           _buildContactRow(
+            context: context,
             icon: "assets/images/telegram_logo.png",
             label: "@${model.contact.telegram}",
-            onTap: () => _launchURL("https://t.me/${model.contact.telegram}"),
+            onTap: () => _openTelegram(context, model.contact.telegram),
           ),
-
           const SizedBox(height: 16.0),
           _buildContactRow(
+            context: context,
             icon: "assets/images/instagram_logo.png",
             label: "@${model.contact.instagram}",
-            onTap: () => _launchURL("https://instagram.com/_u/${model.contact.instagram}"),
+            onTap: () => _launchURL(context, "https://instagram.com/_u/${model.contact.instagram}"),
           ),
-
           const SizedBox(height: 16.0),
           _buildContactRow(
+            context: context,
             icon: "assets/images/phone.png",
             label: model.contact.phone,
-            onTap: () => _launchURL("tel:${model.contact.phone}"),
+            onTap: () => _launchURL(context, "tel:${model.contact.phone}"),
           ),
-
           const SizedBox(height: 24.0),
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -80,6 +93,7 @@ class WContactBottomSheet extends StatelessWidget {
   }
 
   Widget _buildContactRow({
+    required BuildContext context,
     required String icon,
     required String label,
     required VoidCallback onTap,

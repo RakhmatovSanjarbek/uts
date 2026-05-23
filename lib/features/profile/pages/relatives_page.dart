@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
-import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
-import 'package:uts_cargo/features/profile/widgets/w_retavive_passport_info.dart';
+import 'package:uts_cargo/features/profile/widgets/w_relative_passport_info.dart';
 
 import '../../../core/svg/app_svg.dart';
 import '../../../core/theme/app_colors.dart';

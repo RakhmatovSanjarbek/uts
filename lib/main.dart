@@ -1,4 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uts_cargo/core/network/api_client.dart';
@@ -6,7 +8,9 @@ import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/data/datasource/auth_remote_data_source.dart';
 import 'package:uts_cargo/data/datasource/calculator_remote_data_source.dart';
 import 'package:uts_cargo/data/datasource/chat_remote_data_source.dart';
+import 'package:uts_cargo/data/datasource/flight_remote_data_source.dart';
 import 'package:uts_cargo/data/datasource/info_remote_data_source.dart';
+import 'package:uts_cargo/data/datasource/notification_remote_data_source.dart';
 import 'package:uts_cargo/data/datasource/order_remote_data_source.dart';
 import 'package:uts_cargo/data/datasource/profile_remote_data_source.dart';
 import 'package:uts_cargo/data/datasource/video_remote_data_source.dart';
@@ -14,11 +18,14 @@ import 'package:uts_cargo/data/datasource/warehouse_remote_data_source.dart';
 import 'package:uts_cargo/data/repositories/auth_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/calculator_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/chat_repository_impl.dart';
+import 'package:uts_cargo/data/repositories/flight_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/info_repositpry_impl.dart';
+import 'package:uts_cargo/data/repositories/notification_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/order_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/profile_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/video_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/warehouse_repository_impl.dart';
+import 'package:uts_cargo/domain/repositories/flight_repository.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/auth/pages/enter_full_info_page.dart';
 import 'package:uts_cargo/features/auth/pages/otp_verification_page.dart';
@@ -26,8 +33,11 @@ import 'package:uts_cargo/features/auth/pages/sign_in_page.dart';
 import 'package:uts_cargo/features/calculator/bloc/calculator_bloc.dart';
 import 'package:uts_cargo/features/calculator/pages/calculator_page.dart';
 import 'package:uts_cargo/features/dashboard/dashboard_page.dart';
-import 'package:uts_cargo/features/home/bloc/warehouse_bloc.dart';
-import 'package:uts_cargo/features/home/info_bloc/info_bloc.dart';
+import 'package:uts_cargo/features/home/bloc/flight_bloc/flight_bloc.dart';
+import 'package:uts_cargo/features/home/bloc/notification_bloc/notification_bloc.dart';
+import 'package:uts_cargo/features/home/bloc/unassigned_bloc/unassigned_bloc.dart';
+import 'package:uts_cargo/features/home/bloc/warehouse_bloc/warehouse_bloc.dart';
+import 'package:uts_cargo/features/home/bloc/info_bloc/info_bloc.dart';
 import 'package:uts_cargo/features/home/pages/about_page.dart';
 import 'package:uts_cargo/features/profile/bloc/easy_localization_bloc.dart'; // LanguageBloc nomi shunday deb taxmin qilindi
 import 'package:uts_cargo/features/profile/bloc/profile_bloc.dart';
@@ -37,13 +47,25 @@ import 'package:uts_cargo/features/support/bloc/chat_bloc.dart';
 import 'package:uts_cargo/features/video_lesson/bloc/video_bloc.dart';
 
 import 'core/constants/constants.dart';
-import 'core/service/auth_service.dart';
+import 'core/service/fcm_service.dart';
+import 'data/datasource/unassigned_remote_data_source.dart';
+import 'data/repositories/unassigned_repository_impl.dart';
 import 'features/order/bloc/order_bloc.dart';
 import 'features/video_lesson/pages/Video_page.dart';
+import 'firebase_options.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   final apiClient = ApiClient();
 
@@ -56,6 +78,9 @@ void main() async {
   final calculatorDataSource = CalculatorRemoteDataSource(apiClient);
   final warehouseDataSource = WarehouseRemoteDataSource(apiClient);
   final infoDataSource = InfoRemoteDataSource(apiClient);
+  final notificationDataSource = NotificationRemoteDataSource(apiClient);
+  final unassignedDataSource = UnassignedRemoteDataSource(apiClient);
+  final flightsDataSource = FlightRemoteDataSource(apiClient);
 
   // Repositories
   final authRepository = AuthRepositoryImpl(authDataSource);
@@ -66,6 +91,14 @@ void main() async {
   final calculatorRepository = CalculatorRepositoryImpl(calculatorDataSource);
   final warehouseRepository = WarehouseRepositoryImpl(warehouseDataSource);
   final infoRepository = InfoRepositoryImpl(infoDataSource);
+  final notificationRepository = NotificationRepositoryImpl(
+    notificationDataSource,
+  );
+  final unassignedRepository = UnassignedRepositoryImpl(unassignedDataSource);
+  final flightRepository = FlightRepositoryImpl(flightsDataSource);
+
+  final fcmService = FcmService();
+  await fcmService.initialize();
 
   runApp(
     EasyLocalization(
@@ -81,12 +114,16 @@ void main() async {
         calculatorRepository: calculatorRepository,
         warehouseRepository: warehouseRepository,
         infoRepository: infoRepository,
+        notificationRepository: notificationRepository,
+        unassignedRepository: unassignedRepository,
+        flightRepository: flightRepository,
+        fcmService: fcmService,
       ),
     ),
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final AuthRepositoryImpl authRepository;
   final ProfileRepositoryImpl profileRepository;
   final OrderRepositoryImpl orderRepository;
@@ -95,6 +132,10 @@ class MyApp extends StatelessWidget {
   final CalculatorRepositoryImpl calculatorRepository;
   final WarehouseRepositoryImpl warehouseRepository;
   final InfoRepositoryImpl infoRepository;
+  final NotificationRepositoryImpl notificationRepository;
+  final UnassignedRepositoryImpl unassignedRepository;
+  final FlightRepositoryImpl flightRepository;
+  final FcmService fcmService;
 
   const MyApp({
     super.key,
@@ -106,24 +147,54 @@ class MyApp extends StatelessWidget {
     required this.warehouseRepository,
     required this.profileRepository,
     required this.infoRepository,
+    required this.fcmService,
+    required this.notificationRepository,
+    required this.unassignedRepository,
+    required this.flightRepository,
   });
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.fcmService.checkInitialMessage();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => LanguageBloc()),
-        BlocProvider(create: (_) => AuthBloc(authRepository)),
-        BlocProvider(create: (context) => ProfileBloc(
-          profileRepository,
-          authBloc: context.read<AuthBloc>(), // AuthBloc ni yuboramiz
-        )),
-        BlocProvider(create: (_) => OrderBloc(orderRepository)),
-        BlocProvider(create: (_) => ChatBloc(chatRepository)),
-        BlocProvider(create: (_) => VideoBloc(videoRepository)),
-        BlocProvider(create: (_) => CalculatorBloc(calculatorRepository)),
-        BlocProvider(create: (_) => WarehouseBloc(warehouseRepository)),
-        BlocProvider(create: (_) => InfoBloc(infoRepository)),
+        BlocProvider(create: (_) => AuthBloc(widget.authRepository)),
+        BlocProvider(
+          create: (context) => ProfileBloc(
+            widget.profileRepository,
+            authBloc: context.read<AuthBloc>(), // AuthBloc ni yuboramiz
+          ),
+        ),
+        BlocProvider(create: (_) => OrderBloc(widget.orderRepository)),
+        BlocProvider(create: (_) => ChatBloc(widget.chatRepository)),
+        BlocProvider(create: (_) => VideoBloc(widget.videoRepository)),
+        BlocProvider(
+          create: (_) => CalculatorBloc(widget.calculatorRepository),
+        ),
+        BlocProvider(create: (_) => WarehouseBloc(widget.warehouseRepository)),
+        BlocProvider(create: (_) => InfoBloc(widget.infoRepository)),
+        BlocProvider(
+          create: (_) => NotificationBloc(widget.notificationRepository),
+        ),
+        BlocProvider(
+          create: (_) => UnassignedBloc(widget.unassignedRepository),
+        ),
+        BlocProvider(
+          create: (_) => FlightBloc(widget.flightRepository),
+        ),
       ],
       child: Builder(
         builder: (context) {

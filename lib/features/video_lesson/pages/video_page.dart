@@ -43,7 +43,6 @@ class _VideoPageState extends State<VideoPage> {
         return data['title'] ?? 'YouTube Video';
       }
     } catch (e) {
-      print('Title olishda xatolik: $e');
     }
     return null;
   }

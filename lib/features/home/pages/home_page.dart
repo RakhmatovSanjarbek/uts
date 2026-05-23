@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
-import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 import 'package:uts_cargo/core/utils/map_service.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
-import 'package:uts_cargo/features/home/bloc/warehouse_bloc.dart';
-import 'package:uts_cargo/features/home/info_bloc/info_bloc.dart';
+import 'package:uts_cargo/features/home/bloc/warehouse_bloc/warehouse_bloc.dart';
+import 'package:uts_cargo/features/home/bloc/info_bloc/info_bloc.dart';
 import 'package:uts_cargo/features/home/pages/all_warehouse_page.dart';
+import 'package:uts_cargo/features/home/pages/unassigned_cargo_page.dart';
+import 'package:uts_cargo/features/home/pages/warehouse_page.dart';
 import 'package:uts_cargo/features/home/widgets/w_basic_management.dart';
 import 'package:uts_cargo/features/home/widgets/w_contact_bottom_sheet.dart';
 import 'package:uts_cargo/features/home/widgets/w_home_toolbar.dart';
@@ -20,6 +22,7 @@ import 'package:uts_cargo/features/profile/bloc/profile_bloc.dart';
 import '../../../data/models/info_model/info_model.dart';
 import '../../../data/models/user_model/user_model.dart';
 import '../../../data/models/warehouse/arrived_group_response.dart';
+import 'flights_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -32,6 +35,7 @@ class _HomePageState extends State<HomePage> {
   InfoModel? _cachedInfo;
   String? _userId;
   String? _fullName;
+  String? _phoneNumber;
   List<ArrivedGroupResponse> _lastWarehouseData = [];
   bool _isRefreshing = false;
   bool _isLoading = true;
@@ -74,17 +78,20 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _showFeatureUnavailableMessage(BuildContext context, AuthState authState) {
+  void _showFeatureUnavailableMessage(
+    BuildContext context,
+    AuthState authState,
+  ) {
     String message = "";
 
     if (authState is UnauthenticatedState) {
-      message = "Bu funksiyadan foydalanish uchun ro'yxatdan o'ting";
+      message = AppStrings.registerToUse;
     } else if (authState is PendingState) {
-      message = "Akkauntingiz tekshirilmoqda. Tasdiqlangandan keyin bu funksiyadan foydalanishingiz mumkin";
+      message = AppStrings.accountChecking;
     } else if (authState is RejectedState) {
-      message = "Akkauntingiz rad etilgan. Qayta ro'yxatdan o'ting";
+      message = AppStrings.accountRejectedReRegister;
     } else {
-      message = "Bu funksiyadan foydalanish uchun akkaunt tasdiqlangan bo'lishi kerak";
+      message = AppStrings.accountMustBeVerified;
     }
 
     final snackBar = SnackBar(
@@ -93,30 +100,24 @@ class _HomePageState extends State<HomePage> {
       duration: const Duration(seconds: 3),
       action: (authState is UnauthenticatedState || authState is RejectedState)
           ? SnackBarAction(
-        label: authState is UnauthenticatedState ? "Ro'yxatdan o'tish" : "Qayta ro'yxatdan o'tish",
-        onPressed: () {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          // UnauthenticatedState bo'lsa login ga, RejectedState bo'lsa register ga telefon raqam bilan o'tadi
-          if (authState is UnauthenticatedState) {
-            Navigator.pushNamed(context, "/login");
-          } else if (authState is RejectedState) {
-            // Rad etilgan foydalanuvchining telefon raqamini olish
-            final user = (authState).user;
-            final phone = user.phone;
-            Navigator.pushNamed(
-              context,
-              "/register",
-              arguments: phone,
-            );
-          }
-        },
-      )
+              label: authState is UnauthenticatedState
+                  ? AppStrings.registration
+                  : AppStrings.reRegister,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                if (authState is UnauthenticatedState) {
+                  Navigator.pushNamed(context, "/login");
+                } else if (authState is RejectedState) {
+                  final user = (authState).user;
+                  final phone = user.phone;
+                  Navigator.pushNamed(context, "/register", arguments: phone);
+                }
+              },
+            )
           : null,
     );
 
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
-
-    // 3 sekunddan keyin snackbarni avtomatik yopish
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -153,8 +154,7 @@ class _HomePageState extends State<HomePage> {
                       isRejected,
                     ),
                   ),
-                  if (isRejected)
-                    _buildRejectionInfo(authState.user),
+                  if (isRejected) _buildRejectionInfo(authState.user),
                 ],
               ),
               if (isUnauthenticated)
@@ -188,12 +188,12 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.info_outline, color: Colors.red, size: 20),
               SizedBox(width: 8),
               Text(
-                "Akkaunt rad etilgan",
+                AppStrings.accountRejected,
                 style: TextStyle(
                   color: Colors.red,
                   fontWeight: FontWeight.bold,
@@ -207,8 +207,20 @@ class _HomePageState extends State<HomePage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Sabab: ", style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
-                Expanded(child: Text(user.rejectionReasonDisplay!, style: const TextStyle(color: Colors.black87, fontSize: 13))),
+                 Text(
+                  "${AppStrings.reason}: ",
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    user.rejectionReasonDisplay!,
+                    style: const TextStyle(color: Colors.black87, fontSize: 13),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 4),
@@ -217,8 +229,20 @@ class _HomePageState extends State<HomePage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Izoh: ", style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
-                Expanded(child: Text(user.rejectionNote!, style: const TextStyle(color: Colors.black87, fontSize: 13))),
+                Text(
+                  "${AppStrings.comment}: ",
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    user.rejectionNote!,
+                    style: const TextStyle(color: Colors.black87, fontSize: 13),
+                  ),
+                ),
               ],
             ),
           ],
@@ -227,15 +251,21 @@ class _HomePageState extends State<HomePage> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () async {
-                Navigator.pushNamed(context, "/register", arguments: user.phone);
+                Navigator.pushNamed(
+                  context,
+                  "/register",
+                  arguments: user.phone,
+                );
               },
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text("Qayta ro'yxatdan o'tish"),
+              label: Text(AppStrings.reRegister),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ),
@@ -263,9 +293,9 @@ class _HomePageState extends State<HomePage> {
         children: [
           Icon(Icons.person_add, color: AppColors.mainColor),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Text(
-              "Ilovadan to'liq foydalanish uchun ro'yxatdan o'ting",
+              AppStrings.registerForFullAccess,
               style: TextStyle(fontSize: 14),
             ),
           ),
@@ -274,9 +304,11 @@ class _HomePageState extends State<HomePage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.mainColor,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: const Text("Ro'yxatdan o'tish"),
+            child: Text(AppStrings.registration),
           ),
         ],
       ),
@@ -284,12 +316,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMainContent(
-      AuthState authState,
-      bool isAuthenticated,
-      bool isPendingOrRejected,
-      bool isUnauthenticated,
-      bool isRejected,
-      ) {
+    AuthState authState,
+    bool isAuthenticated,
+    bool isPendingOrRejected,
+    bool isUnauthenticated,
+    bool isRejected,
+  ) {
     return MultiBlocListener(
       listeners: [
         BlocListener<InfoBloc, InfoState>(
@@ -303,8 +335,9 @@ class _HomePageState extends State<HomePage> {
           listener: (context, state) {
             if (state is ProfileSuccess) {
               setState(() {
+                _phoneNumber = state.model.phone;
                 _userId = state.model.userId;
-                _fullName="${state.model.firstName} ${state.model.lastName}";
+                _fullName = "${state.model.firstName} ${state.model.lastName}";
               });
             }
           },
@@ -319,13 +352,14 @@ class _HomePageState extends State<HomePage> {
       ],
       child: BlocBuilder<WarehouseBloc, WarehouseState>(
         builder: (context, state) {
-          if (state is WarehouseLoading && _lastWarehouseData.isEmpty && _isLoading) {
+          if (state is WarehouseLoading &&
+              _lastWarehouseData.isEmpty &&
+              _isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
           final List<ArrivedGroupResponse> data = _lastWarehouseData;
           return _buildMainContentBody(
-
             context,
             data,
             authState,
@@ -340,16 +374,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMainContentBody(
-      BuildContext context,
-      List<ArrivedGroupResponse> groups,
-      AuthState authState,
-      bool isAuthenticated,
-      bool isPendingOrRejected,
-      bool isUnauthenticated,
-      bool isRejected,
-      ) {
+    BuildContext context,
+    List<ArrivedGroupResponse> groups,
+    AuthState authState,
+    bool isAuthenticated,
+    bool isPendingOrRejected,
+    bool isUnauthenticated,
+    bool isRejected,
+  ) {
     final double screenHeight = MediaQuery.of(context).size.height;
-    final bottomPadding = isRejected ? 180.0 : (isUnauthenticated ? 100.0 : 0.0);
+    final bottomPadding = isRejected
+        ? 180.0
+        : (isUnauthenticated ? 100.0 : 0.0);
 
     return RefreshIndicator(
       displacement: 150,
@@ -363,13 +399,20 @@ class _HomePageState extends State<HomePage> {
             children: [
               const SizedBox(height: 16),
               WQuickAccess(
-                onProhibitedPressed: () => Navigator.pushNamed(context, "/prohibited"),
+                onProhibitedPressed: () =>
+                    Navigator.pushNamed(context, "/prohibited"),
                 onCalculatorPressed: () {
                   if (isAuthenticated) {
                     Navigator.pushNamed(context, "/calculator");
                   } else {
                     _showFeatureUnavailableMessage(context, authState);
                   }
+                },
+                onFlightPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const FlightsPage()),
+                  );
                 },
               ),
               const SizedBox(height: 16),
@@ -378,23 +421,47 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Text(
                     AppStrings.orders,
-                    style: const TextStyle(color: AppColors.blackColor, fontSize: 18.0, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: AppColors.blackColor,
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ).paddingOnly(left: 16.0),
-                  TextButton(onPressed: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (_)=>AllWarehousePage(fullName: _fullName.toString(), userID: _userId.toString(),)));
-                  }, child: Text("Barchasi",style: TextStyle(fontWeight: FontWeight.bold),))
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AllWarehousePage(
+                            phoneNumber: _phoneNumber.toString(),
+                            fullName: _fullName.toString(),
+                            userID: _userId.toString(),
+                          ),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      AppStrings.all,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ],
               ).paddingOnly(right: 16.0),
               const SizedBox(height: 12),
               Builder(
                 builder: (context) {
-                  final activeOrders = groups.where((item) => item.paymentStatus != "Topshirildi").toList();
+                  final activeOrders = groups
+                      .where((item) => item.paymentStatus != "Topshirildi")
+                      .toList();
 
                   if (activeOrders.isEmpty) {
                     return Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Text(AppStrings.noOrdersYet, style: TextStyle(color: Colors.grey)),
+                        child: Text(
+                          AppStrings.noOrdersYet,
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ),
                     );
                   }
@@ -403,7 +470,26 @@ class _HomePageState extends State<HomePage> {
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: activeOrders.length,
                     itemBuilder: (context, index) {
-                      return WWarehouse(model: activeOrders[index], fullName: _fullName.toString(), userID: _userId.toString(),);
+                      return WWarehouse(
+                        model: activeOrders[index],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => WarehousePage(
+                                model: activeOrders[index],
+                                phoneNumber: _phoneNumber.toString(),
+                                fullName: _fullName.toString(),
+                                userID: _userId.toString(),
+                              ),
+                            ),
+                          ).then((_) {
+                            context.read<WarehouseBloc>().add(
+                              GetArrivedGroupsEvent(),
+                            );
+                          });
+                        },
+                      );
                     },
                   );
                 },
@@ -421,12 +507,24 @@ class _HomePageState extends State<HomePage> {
                 onAboutPressed: () => Navigator.pushNamed(context, "/about"),
                 onPricePressed: () => _showPriceBottomSheet(context),
                 onContactPressed: () => _showContactBottomSheet(context),
+                onUnassignedPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const UnassignedCargoPage()),
+                  );
+                },
               ),
               const SizedBox(height: 30),
               if (_isRefreshing)
                 const Padding(
                   padding: EdgeInsets.all(16.0),
-                  child: Center(child: SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2))),
+                  child: Center(
+                    child: SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -437,7 +535,7 @@ class _HomePageState extends State<HomePage> {
 
   void _showWarehouseBottomSheet(BuildContext context) {
     if (_cachedInfo == null || _userId == null) {
-      context.showSnackBarMessage("Ma'lumotlar yuklanmoqda...");
+      context.showSnackBarMessage(AppStrings.loadingData);
       return;
     }
     final cleanId = _userId!.replaceFirst("UTS-", "");
@@ -445,13 +543,14 @@ class _HomePageState extends State<HomePage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => WWarehouseBottomSheet(userId: cleanId, model: _cachedInfo!),
+      builder: (context) =>
+          WWarehouseBottomSheet(userId: cleanId, model: _cachedInfo!),
     );
   }
 
   void _showPriceBottomSheet(BuildContext context) {
     if (_cachedInfo == null) {
-      context.showSnackBarMessage("Ma'lumotlar yuklanmoqda...");
+      context.showSnackBarMessage(AppStrings.loadingData);
       return;
     }
     showModalBottomSheet(
@@ -464,7 +563,7 @@ class _HomePageState extends State<HomePage> {
 
   void _showContactBottomSheet(BuildContext context) {
     if (_cachedInfo == null) {
-      context.showSnackBarMessage("Ma'lumotlar yuklanmoqda...");
+      context.showSnackBarMessage(AppStrings.loadingData);
       return;
     }
     showModalBottomSheet(

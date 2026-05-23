@@ -12,6 +12,7 @@ class WBasicManagement extends StatelessWidget {
   final VoidCallback onAboutPressed;
   final VoidCallback onPricePressed;
   final VoidCallback onContactPressed;
+  final VoidCallback onUnassignedPressed;
 
   const WBasicManagement({
     super.key,
@@ -20,6 +21,7 @@ class WBasicManagement extends StatelessWidget {
     required this.onAboutPressed,
     required this.onPricePressed,
     required this.onContactPressed,
+    required this.onUnassignedPressed,
   });
 
   @override
@@ -136,7 +138,7 @@ class WBasicManagement extends StatelessWidget {
                 onTap: onVideoPressed,
                 child: Container(
                   width: MediaQuery.sizeOf(context).width * 0.44,
-                  constraints: const BoxConstraints(minHeight: 140), // Balandlikni dinamik ushlab turish uchun
+                  constraints: const BoxConstraints(minHeight: 140),
                   padding: const EdgeInsets.all(12.0),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -164,7 +166,7 @@ class WBasicManagement extends StatelessWidget {
                             height: 36.0,
                             padding: const EdgeInsets.all(6.0),
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle, // BorderRadius o'rniga shape qulayroq
+                              shape: BoxShape.circle,
                               border: Border.all(
                                 color: AppColors.whiteColor,
                                 width: 1.5,
@@ -193,13 +195,22 @@ class WBasicManagement extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12.0), // Bo'sh joy qo'shdik
+                      const SizedBox(height: 12.0),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround, // Rasmlarni markazroqqa yig'ish
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildBrandLogo(context, "assets/images/pinduoduo_logo.png"),
-                          _buildBrandLogo(context, "assets/images/taobao_logo.png"),
-                          _buildBrandLogo(context, "assets/images/alibaba_logo.png"),
+                          _buildBrandLogo(
+                            context,
+                            "assets/images/pinduoduo_logo.png",
+                          ),
+                          _buildBrandLogo(
+                            context,
+                            "assets/images/taobao_logo.png",
+                          ),
+                          _buildBrandLogo(
+                            context,
+                            "assets/images/alibaba_logo.png",
+                          ),
                         ],
                       ),
                     ],
@@ -234,7 +245,11 @@ class WBasicManagement extends StatelessWidget {
                 fonSize: 14.0,
                 onPressed: onPricePressed,
               ),
-              WActionButton(title: AppStrings.noCodeGoods, svgPath: AppSvg.icQrCode),
+              WActionButton(
+                title: AppStrings.noCodeGoods,
+                svgPath: AppSvg.icQrCode,
+                onPressed: onUnassignedPressed,
+              ),
             ],
           ),
         ],
@@ -243,9 +258,10 @@ class WBasicManagement extends StatelessWidget {
   }
 
   Widget _buildBrandLogo(BuildContext context, String assetPath) {
-    double size = MediaQuery.sizeOf(context).width * 0.09; // O'lchamni optimallashtirdik
+    double size =
+        MediaQuery.sizeOf(context).width * 0.09;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8.0), // To'liq doira bo'lishi uchun
+      borderRadius: BorderRadius.circular(8.0),
       child: Image.asset(
         assetPath,
         width: size,

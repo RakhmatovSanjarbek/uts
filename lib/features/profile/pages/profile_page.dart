@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
-import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
@@ -19,6 +19,7 @@ import 'package:uts_cargo/features/profile/widgets/w_user_info.dart';
 import '../../../core/utils/map_service.dart';
 import '../../auth/pages/policy_web_view.dart';
 import '../widgets/w_language_bottom_sheet.dart';
+import '../widgets/w_notification_toggle_button.dart';
 import '../widgets/w_qrcode_bottom_sheet.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -45,7 +46,7 @@ class _ProfilePageState extends State<ProfilePage> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const SignInPage()),
-            (route) => false,
+        (route) => false,
       );
     }
   }
@@ -107,8 +108,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Center(child: Text(AppStrings.profileNotFound)),
                     ),
                   const SizedBox(height: 16.0),
+                  const WNotificationToggleButton(),
+                  const SizedBox(height: 16.0),
 
-                  if (isAuthenticated || isPending || isRejected || isUnauthenticated)
+                  if (isAuthenticated ||
+                      isPending ||
+                      isRejected ||
+                      isUnauthenticated)
                     WActionButton(
                       svgPath: AppSvg.icBadge,
                       buttonName: AppStrings.additionalPassport,
@@ -122,9 +128,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           );
                           if (mounted) _refreshProfile();
                         } else {
-                          context.showSnackBarMessage(
-                              "Bu funksiyadan foydalanish uchun akkaunt tasdiqlangan bo'lishi kerak"
-                          );
+                          context.showSnackBarMessage(AppStrings.accountMustBeVerified);
                         }
                       },
                     ),
@@ -142,7 +146,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   WActionButton(
                     svgPath: AppSvg.icLanguage,
                     buttonName:
-                    "${AppStrings.appLanguage} (${AppStrings.language})",
+                        "${AppStrings.appLanguage} (${AppStrings.language})",
                     onPressed: () => _showLanguageBottomSheet(context),
                   ),
                   const SizedBox(height: 16.0),
@@ -168,7 +172,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   if (isRejected)
                     WActionButton(
                       svgPath: AppSvg.icLogout,
-                      buttonName: "Qayta ro'yxatdan o'tish",
+                      buttonName: AppStrings.reRegister,
                       iconColor: AppColors.redColor,
                       txtColor: AppColors.redColor,
                       onPressed: () {
@@ -183,7 +187,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   if (isUnauthenticated)
                     WActionButton(
                       svgPath: AppSvg.icLogout,
-                      buttonName: "Ro'yxatdan o'tish",
+                      buttonName: AppStrings.registration,
                       iconColor: AppColors.mainColor,
                       txtColor: AppColors.blackColor,
                       onPressed: () => Navigator.pushNamed(context, "/login"),
@@ -202,7 +206,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   WActionButton(
                     svgPath: AppSvg.icLogout,
-                    buttonName: "Hisobdan chiqish",
+                    buttonName: AppStrings.logout,
                     iconColor: AppColors.mainColor,
                     txtColor: AppColors.blackColor,
                     onPressed: () => _showLogoutDialog(context),
@@ -211,7 +215,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 16.0),
 
                   Text(
-                    "${AppStrings.appVersion} 1.0.2",
+                    "${AppStrings.appVersion} 1.0.3",
                     style: TextStyle(
                       color: AppColors.blackColor,
                       fontSize: 12.0,
@@ -275,7 +279,7 @@ class _ProfilePageState extends State<ProfilePage> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const SignInPage()),
-          (route) => false,
+      (route) => false,
     );
   }
 
@@ -301,7 +305,8 @@ class _ProfilePageState extends State<ProfilePage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => WQRCodeBottomSheet(qrData: qrData),
+      builder: (context) =>
+          WQRCodeBottomSheet(qrData: qrData, title: AppStrings.yourIdNumber),
     );
   }
 
@@ -316,12 +321,12 @@ class _ProfilePageState extends State<ProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Hisobdan chiqish",
+              AppStrings.logout,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Text(
-              "Haqiqatan ham hisobdan chiqmoqchimisiz?",
+              AppStrings.confirmLogout,
               textAlign: TextAlign.start,
               style: const TextStyle(color: AppColors.grayColor),
             ),
@@ -364,7 +369,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     _logout();
                   },
                   child: Text(
-                    "Chiqish",
+                    AppStrings.exit,
                     style: const TextStyle(
                       color: AppColors.whiteColor,
                       fontWeight: FontWeight.bold,
@@ -439,27 +444,27 @@ class _ProfilePageState extends State<ProfilePage> {
                       onPressed: isLoading
                           ? null
                           : () {
-                        context.read<ProfileBloc>().add(
-                          DeleteAccountEvent(),
-                        );
-                        Navigator.pop(dialogContext);
-                      },
+                              context.read<ProfileBloc>().add(
+                                DeleteAccountEvent(),
+                              );
+                              Navigator.pop(dialogContext);
+                            },
                       child: isLoading
                           ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: AppColors.whiteColor,
-                          strokeWidth: 2,
-                        ),
-                      )
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: AppColors.whiteColor,
+                                strokeWidth: 2,
+                              ),
+                            )
                           : Text(
-                        AppStrings.delete,
-                        style: const TextStyle(
-                          color: AppColors.whiteColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                              AppStrings.delete,
+                              style: const TextStyle(
+                                color: AppColors.whiteColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     );
                   },
                 ),

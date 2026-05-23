@@ -5,12 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
-import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
 
 import '../../../data/models/warehouse/arrived_group_response.dart';
-import '../bloc/warehouse_bloc.dart';
+import '../bloc/warehouse_bloc/warehouse_bloc.dart';
 
 class PaymentUploadPage extends StatefulWidget {
   final ArrivedGroupResponse group;
@@ -40,7 +40,7 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
       listener: (context, state) {
         if (state is WarehouseLoaded) {
           context.showSnackBarMessage(AppStrings.receiptSent);
-          Navigator.pop(context);
+          Navigator.popUntil(context, (route) => route.isFirst);
         } else if (state is WarehouseError) {
           context.showSnackBarMessage(state.message);
         }

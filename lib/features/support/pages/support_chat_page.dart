@@ -1,11 +1,10 @@
-// lib/features/support/pages/support_chat_page.dart
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
+import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
@@ -17,7 +16,12 @@ import '../widgets/w_message_bubble.dart';
 import '../widgets/w_nput_area.dart';
 
 class SupportChatPage extends StatefulWidget {
-  const SupportChatPage({super.key});
+  final bool isActive;
+
+  const SupportChatPage({
+    super.key,
+    required this.isActive,
+  });
 
   @override
   State<SupportChatPage> createState() => _SupportChatPageState();
@@ -30,15 +34,30 @@ class _SupportChatPageState extends State<SupportChatPage> {
   UserModel? _userModel;
   Timer? _refreshTimer;
   bool _isFirstLoad = true;
-  bool _shouldAutoScroll = true;  // ✅ Yangi: avtomatik scroll qilish kerakmi?
-  int _lastMessageCount = 0;       // ✅ Yangi: oldingi xabarlar soni
+  bool _shouldAutoScroll = true;
+  int _lastMessageCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadChat();
-    _startAutoRefresh();
+    if (widget.isActive) {
+      _loadChat();
+      _startAutoRefresh();
+    }
     _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void didUpdateWidget(covariant SupportChatPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.isActive && !oldWidget.isActive) {
+      _loadChat();
+      _startAutoRefresh();
+    }
+    else if (!widget.isActive && oldWidget.isActive) {
+      _stopAutoRefresh();
+    }
   }
 
   @override
@@ -53,15 +72,12 @@ class _SupportChatPageState extends State<SupportChatPage> {
   void _onScroll() {
     if (!_scrollController.hasClients) return;
 
-    // Foydalanuvchi pastga yaqin bo'lsa (scroll position 0 dan katta)
-    // yoki eng pastda bo'lsa, auto scroll ni yoqamiz
     final isNearBottom = _scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 100;
 
     if (isNearBottom) {
       _shouldAutoScroll = true;
     } else {
-      // Foydalanuvchi o'qiyotgan bo'lsa, auto scroll ni o'chiramiz
       _shouldAutoScroll = false;
     }
   }
@@ -73,7 +89,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
   void _startAutoRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (mounted) {
+      if (mounted && widget.isActive) {
         context.read<ChatBloc>().add(GetChatsEvent(isAutoRefresh: true));
       }
     });
@@ -113,7 +129,6 @@ class _SupportChatPageState extends State<SupportChatPage> {
     if (text.isEmpty) return;
     context.read<ChatBloc>().add(SendChatMessageEvent(message: text));
     _controller.clear();
-    // Xabar yuborganda pastga scroll qilish kerak
     _shouldAutoScroll = true;
     _scrollToBottom();
   }
@@ -166,7 +181,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
           final bool isRejected = authState is RejectedState;
           final bool isUnauthenticated = authState is UnauthenticatedState;
 
-          if (isRejected && authState is RejectedState) {
+          if (isRejected) {
             _userModel = authState.user;
           }
 
@@ -186,16 +201,16 @@ class _SupportChatPageState extends State<SupportChatPage> {
     VoidCallback? onPressed;
 
     if (isUnauthenticated) {
-      message = "Chat xizmatidan foydalanish uchun ro'yxatdan o'ting";
-      buttonText = "Ro'yxatdan o'tish";
+      message = AppStrings.registerToUse;
+      buttonText = AppStrings.registration;
       onPressed = () => Navigator.pushNamed(context, "/login");
     } else if (isPending) {
-      message = "Akkauntingiz tekshirilmoqda. Chat xizmatidan foydalanish uchun akkaunt tasdiqlanishi kerak.";
+      message = AppStrings.accountChecking;
       buttonText = "";
       onPressed = null;
     } else if (isRejected) {
-      message = "Akkauntingiz rad etilgan. Chat xizmatidan foydalanish uchun qayta ro'yxatdan o'ting.";
-      buttonText = "Qayta ro'yxatdan o'tish";
+      message = AppStrings.accountRejectedReRegister;
+      buttonText = AppStrings.reRegister;
       onPressed = () {
         if (_userModel != null && _userModel!.phone.isNotEmpty) {
           Navigator.pushNamed(
@@ -217,7 +232,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
               AppSvg.icMessage,
               width: 80,
               height: 80,
-              colorFilter: ColorFilter.mode(
+              colorFilter: const ColorFilter.mode(
                 AppColors.grayColor,
                 BlendMode.srcIn,
               ),
@@ -226,7 +241,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 color: AppColors.grayColor,
               ),
@@ -259,7 +274,6 @@ class _SupportChatPageState extends State<SupportChatPage> {
           child: BlocConsumer<ChatBloc, ChatState>(
             listener: (context, state) {
               if (state is ChatSuccess) {
-                // Yangi xabar kelganligini tekshirish
                 final currentCount = state.response.chats.length;
                 final hasNewMessage = currentCount > _lastMessageCount;
                 _lastMessageCount = currentCount;
@@ -269,7 +283,6 @@ class _SupportChatPageState extends State<SupportChatPage> {
                   _shouldAutoScroll = true;
                   _scrollToBottom();
                 } else if (hasNewMessage && _shouldAutoScroll) {
-                  // Faqat auto scroll yoqilgan bo'lsa va yangi xabar kelgan bo'lsa
                   _scrollToBottom();
                 }
               } else if (state is ChatFailure) {
@@ -292,14 +305,14 @@ class _SupportChatPageState extends State<SupportChatPage> {
                           AppSvg.icMessage,
                           width: 60,
                           height: 60,
-                          colorFilter: ColorFilter.mode(
+                          colorFilter: const ColorFilter.mode(
                             AppColors.grayColor,
                             BlendMode.srcIn,
                           ),
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          "Xabarlar mavjud emas",
+                          AppStrings.noMessages,
                           style: TextStyle(
                             color: AppColors.grayColor,
                             fontSize: 16,

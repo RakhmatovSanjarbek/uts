@@ -7,11 +7,13 @@ import '../../../../core/svg/app_svg.dart';
 class WQuickAccess extends StatelessWidget {
   final VoidCallback onProhibitedPressed;
   final VoidCallback onCalculatorPressed;
+  final VoidCallback onFlightPressed;
 
   const WQuickAccess({
     super.key,
     required this.onProhibitedPressed,
     required this.onCalculatorPressed,
+    required this.onFlightPressed,
   });
 
   @override
@@ -26,7 +28,7 @@ class WQuickAccess extends StatelessWidget {
             onTap: onProhibitedPressed,
             child: WQuickButton(
               icon: AppSvg.icWarning,
-              title: AppStrings.prohibitedItems
+              title: AppStrings.prohibitedItems,
             ),
           ),
           GestureDetector(
@@ -37,7 +39,8 @@ class WQuickAccess extends StatelessWidget {
             ),
           ),
           GestureDetector(
-            child: WQuickButton(icon: AppSvg.icPlane, title: AppStrings.delivery, isActive: false,),
+            onTap: onFlightPressed,
+            child: WQuickButton(icon: AppSvg.icPlane, title: AppStrings.flightSchedule),
           ),
         ],
       ),

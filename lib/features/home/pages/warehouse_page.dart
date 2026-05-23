@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
-import 'package:uts_cargo/core/extensions/snackbar_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
@@ -9,14 +8,22 @@ import 'package:uts_cargo/features/home/pages/payment_page.dart';
 
 import '../../../core/constants/constants.dart';
 import '../../../data/models/warehouse/arrived_group_response.dart';
+import '../../profile/widgets/w_qrcode_bottom_sheet.dart';
 import 'delivery_page.dart';
 
 class WarehousePage extends StatelessWidget {
+  final String phoneNumber;
   final String fullName;
   final String userID;
   final ArrivedGroupResponse model;
 
-  const WarehousePage({super.key, required this.model, required this.fullName, required this.userID});
+  const WarehousePage({
+    super.key,
+    required this.model,
+    required this.fullName,
+    required this.userID,
+    required this.phoneNumber,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +32,20 @@ class WarehousePage extends StatelessWidget {
       backgroundColor: AppColors.screenColor,
       appBar: AppBar(
         backgroundColor: AppColors.screenColor,
+        actions: [
+          IconButton(
+            onPressed: () {
+              _showQRBottomSheet(context, model.receiptCode);
+            },
+            icon: SvgPicture.asset(
+              AppSvg.icQrCod,
+              colorFilter: ColorFilter.mode(
+                AppColors.mainColor,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
+        ],
         centerTitle: true,
         title: Text(
           AppStrings.order,
@@ -34,7 +55,6 @@ class WarehousePage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Existing row widget
             Row(
               children: [
                 _buildImage(model.image),
@@ -52,7 +72,7 @@ class WarehousePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 4.0),
                       Text(
-                        "${AppStrings.weight} ${model.totalWeight} kg",
+                        "${AppStrings.weight} ${model.totalWeight} ${AppStrings.kg}",
                         style: TextStyle(
                           color: AppColors.grayColor,
                           fontSize: 13.0,
@@ -101,8 +121,8 @@ class WarehousePage extends StatelessWidget {
                 ),
                 child: Text(
                   model.adminNote.isNotEmpty
-                      ? "Rad etilish sababi: ${model.adminNote}"
-                      : "Rad etilish sababi ko'rsatilmagan",
+                      ? "${AppStrings.rejectionReason}: ${model.adminNote}"
+                      : AppStrings.noRejectionReason,
                   style: const TextStyle(
                     fontSize: 14.0,
                     color: AppColors.blackColor,
@@ -137,26 +157,31 @@ class WarehousePage extends StatelessWidget {
                         builder: (_) => PaymentUploadPage(group: model),
                       ),
                     );
-                  } else if (model.paymentStatus == "To'lov tasdiqlandi" &&
-                      model.deliveryMethod == null) {
+                  } else if (model.paymentStatus == "To'lov tasdiqlandi") {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            DeliverySelectionPage(groupId: model.id, fullName: fullName, userID: userID,),
+                        builder: (_) => DeliverySelectionPage(
+                          groupId: model.id,
+                          resCode: model.receiptCode,
+                          phoneNumber: phoneNumber,
+                          fullName: fullName,
+                          userID: userID,
+                        ),
                       ),
                     );
-                  }else if(model.deliveryMethod!=null){
-                    context.showSnackBarMessage("Siz tovarni qabul qilish usulini tanlab bo'lgansiz");
                   }
                 },
                 child: Text(
                   model.paymentStatus == "To'lov kutilmoqda"
-                      ? "To'lov qiling"
-                      : model.paymentStatus == "To'lov tasdiqlandi"
-                      ? "Olib ketishni tanlang"
+                      ? AppStrings.makePayment
+                      : model.paymentStatus == "To'lov tasdiqlandi" &&
+                            model.deliveryMethod == null
+                      ? AppStrings.selectPickup
                       : model.paymentStatus == "To'lov rad etildi"
-                      ? "Qayta to'lov qiling"
+                      ? AppStrings.rePay
+                      : model.deliveryMethod != null
+                      ? AppStrings.changePickupOrder
                       : "",
                   style: TextStyle(
                     color: AppColors.whiteColor,
@@ -202,6 +227,14 @@ class WarehousePage extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+
+  void _showQRBottomSheet(BuildContext context, String qrData) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => WQRCodeBottomSheet(qrData: qrData, title: AppStrings.yourCargoNumber,),
     );
   }
 

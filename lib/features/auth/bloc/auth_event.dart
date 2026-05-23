@@ -21,7 +21,8 @@ class SignUpEvent extends AuthEvent {
 class OtpEvent extends AuthEvent {
   final String phone;
   final String code;
-  OtpEvent(this.phone, this.code);
+  final String fcmToken;
+  OtpEvent(this.phone, this.code, this.fcmToken);
 }
 
 class LogoutEvent extends AuthEvent {}
