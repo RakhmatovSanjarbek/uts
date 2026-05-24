@@ -85,7 +85,7 @@ class WWarehouseBottomSheet extends StatelessWidget {
                         Clipboard.setData(
                           ClipboardData(
                             text:
-                                "收货人: UT-$userId\n电话: ${model.xitoyAvia.phone}\n安市: ${model.xitoyAvia.address} UT-$userId",
+                                "收货人: US-$userId\n电话: ${model.xitoyAvia.phone}\n安市: ${model.xitoyAvia.address} US-$userId",
                           ),
                         );
                         context.showSnackBarMessage(AppStrings.addressCopied);
@@ -96,7 +96,7 @@ class WWarehouseBottomSheet extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  "收货人: UT-$userId\n电话: ${model.xitoyAvia.phone}\n安市: ${model.xitoyAvia.address} UT-$userId",
+                  "收货人: US-$userId\n电话: ${model.xitoyAvia.phone}\n安市: ${model.xitoyAvia.address} US-$userId",
                   style: TextStyle(color: AppColors.blackColor, fontSize: 16.0),
                 ).paddingOnly(right: 120.0),
               ],
@@ -147,7 +147,7 @@ class WWarehouseBottomSheet extends StatelessWidget {
                         Clipboard.setData(
                           ClipboardData(
                             text:
-                            "收货人: A-$userId\n电话: ${model.xitoyAvto.phone}\n安市: ${model.xitoyAvto.address} A-$userId",
+                            "收货人: GG-$userId\n电话: ${model.xitoyAvto.phone}\n安市: ${model.xitoyAvto.address} GG-$userId",
                           ),
                         );
                         context.showSnackBarMessage(AppStrings.addressCopied);
@@ -158,7 +158,7 @@ class WWarehouseBottomSheet extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  "收货人: A-$userId\n电话: ${model.xitoyAvto.phone}\n安市: ${model.xitoyAvto.address} A-$userId",
+                  "收货人: GG-$userId\n电话: ${model.xitoyAvto.phone}\n安市: ${model.xitoyAvto.address} GG-$userId",
                   style: TextStyle(color: AppColors.blackColor, fontSize: 16.0),
                 ).paddingOnly(right: 120.0),
               ],

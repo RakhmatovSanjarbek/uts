@@ -132,7 +132,7 @@ class WUserInfo extends StatelessWidget {
   }
 
   String _formatPhoneNumber(String phone) {
-    var phones = phone;
+    var phones = "+$phone";
 
     final code = phones.substring(0, 4);
     final operator = phones.substring(4, 6);
