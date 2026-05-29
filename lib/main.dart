@@ -3,8 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:uts_cargo/core/network/api_client.dart';
 import 'package:uts_cargo/core/theme/app_colors.dart';
+import 'package:uts_cargo/core/widgets/no_internet_sheet.dart';
 import 'package:uts_cargo/data/datasource/auth_remote_data_source.dart';
 import 'package:uts_cargo/data/datasource/calculator_remote_data_source.dart';
 import 'package:uts_cargo/data/datasource/chat_remote_data_source.dart';
@@ -23,9 +25,9 @@ import 'package:uts_cargo/data/repositories/info_repositpry_impl.dart';
 import 'package:uts_cargo/data/repositories/notification_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/order_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/profile_repository_impl.dart';
+import 'package:uts_cargo/data/repositories/version_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/video_repository_impl.dart';
 import 'package:uts_cargo/data/repositories/warehouse_repository_impl.dart';
-import 'package:uts_cargo/domain/repositories/flight_repository.dart';
 import 'package:uts_cargo/features/auth/bloc/auth_bloc.dart';
 import 'package:uts_cargo/features/auth/pages/enter_full_info_page.dart';
 import 'package:uts_cargo/features/auth/pages/otp_verification_page.dart';
@@ -39,20 +41,25 @@ import 'package:uts_cargo/features/home/bloc/unassigned_bloc/unassigned_bloc.dar
 import 'package:uts_cargo/features/home/bloc/warehouse_bloc/warehouse_bloc.dart';
 import 'package:uts_cargo/features/home/bloc/info_bloc/info_bloc.dart';
 import 'package:uts_cargo/features/home/pages/about_page.dart';
-import 'package:uts_cargo/features/profile/bloc/easy_localization_bloc.dart'; // LanguageBloc nomi shunday deb taxmin qilindi
+import 'package:uts_cargo/features/profile/bloc/easy_localization_bloc.dart';
 import 'package:uts_cargo/features/profile/bloc/profile_bloc.dart';
 import 'package:uts_cargo/features/prohibited/pages/prohibited_page.dart';
 import 'package:uts_cargo/features/splash/splash_page.dart';
 import 'package:uts_cargo/features/support/bloc/chat_bloc.dart';
+import 'package:uts_cargo/features/version/bloc/version_bloc.dart';
 import 'package:uts_cargo/features/video_lesson/bloc/video_bloc.dart';
 
 import 'core/constants/constants.dart';
 import 'core/service/fcm_service.dart';
 import 'data/datasource/unassigned_remote_data_source.dart';
+import 'data/datasource/version_remote_data_source.dart';
 import 'data/repositories/unassigned_repository_impl.dart';
 import 'features/order/bloc/order_bloc.dart';
 import 'features/video_lesson/pages/Video_page.dart';
 import 'firebase_options.dart';
+
+// Global navigatorKey — barcha sahifalardan context olish uchun
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -62,14 +69,11 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   final apiClient = ApiClient();
 
-  // Data sources
   final authDataSource = AuthRemoteDataSource(apiClient);
   final profileDataSource = ProfileRemoteDataSource(apiClient);
   final orderDataSource = OrderRemoteDataSource(apiClient);
@@ -81,8 +85,8 @@ void main() async {
   final notificationDataSource = NotificationRemoteDataSource(apiClient);
   final unassignedDataSource = UnassignedRemoteDataSource(apiClient);
   final flightsDataSource = FlightRemoteDataSource(apiClient);
+  final versionDataSource = VersionRemoteDataSource(apiClient);
 
-  // Repositories
   final authRepository = AuthRepositoryImpl(authDataSource);
   final profileRepository = ProfileRepositoryImpl(profileDataSource);
   final orderRepository = OrderRepositoryImpl(orderDataSource);
@@ -96,6 +100,7 @@ void main() async {
   );
   final unassignedRepository = UnassignedRepositoryImpl(unassignedDataSource);
   final flightRepository = FlightRepositoryImpl(flightsDataSource);
+  final versionRepository = VersionRepositoryImpl(versionDataSource);
 
   final fcmService = FcmService();
   await fcmService.initialize();
@@ -117,6 +122,7 @@ void main() async {
         notificationRepository: notificationRepository,
         unassignedRepository: unassignedRepository,
         flightRepository: flightRepository,
+        versionRepositoryImpl: versionRepository,
         fcmService: fcmService,
       ),
     ),
@@ -135,6 +141,7 @@ class MyApp extends StatefulWidget {
   final NotificationRepositoryImpl notificationRepository;
   final UnassignedRepositoryImpl unassignedRepository;
   final FlightRepositoryImpl flightRepository;
+  final VersionRepositoryImpl versionRepositoryImpl;
   final FcmService fcmService;
 
   const MyApp({
@@ -151,6 +158,7 @@ class MyApp extends StatefulWidget {
     required this.notificationRepository,
     required this.unassignedRepository,
     required this.flightRepository,
+    required this.versionRepositoryImpl,
   });
 
   @override
@@ -158,11 +166,48 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  bool _isSheetShowing = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.fcmService.checkInitialMessage();
+      _listenConnectivity();
+    });
+  }
+
+  void _listenConnectivity() {
+    Connectivity().onConnectivityChanged.listen((result) {
+      final hasInternet = result.any((r) => r != ConnectivityResult.none);
+      final context = navigatorKey.currentContext;
+      if (context == null) return;
+
+      if (!hasInternet && !_isSheetShowing) {
+        _isSheetShowing = true;
+        showModalBottomSheet(
+          context: context,
+          isDismissible: false,
+          enableDrag: false,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (_) => NoInternetSheet(
+            onRetry: () async {
+              final result = await Connectivity().checkConnectivity();
+              final hasInternet = result.any(
+                (r) => r != ConnectivityResult.none,
+              );
+              if (hasInternet) {
+                navigatorKey.currentState?.pop();
+                _isSheetShowing = false;
+              }
+            },
+          ),
+        ).then((_) => _isSheetShowing = false);
+      } else if (hasInternet && _isSheetShowing) {
+        navigatorKey.currentState?.pop();
+        _isSheetShowing = false;
+      }
     });
   }
 
@@ -175,7 +220,7 @@ class _MyAppState extends State<MyApp> {
         BlocProvider(
           create: (context) => ProfileBloc(
             widget.profileRepository,
-            authBloc: context.read<AuthBloc>(), // AuthBloc ni yuboramiz
+            authBloc: context.read<AuthBloc>(),
           ),
         ),
         BlocProvider(create: (_) => OrderBloc(widget.orderRepository)),
@@ -192,20 +237,19 @@ class _MyAppState extends State<MyApp> {
         BlocProvider(
           create: (_) => UnassignedBloc(widget.unassignedRepository),
         ),
-        BlocProvider(
-          create: (_) => FlightBloc(widget.flightRepository),
-        ),
+        BlocProvider(create: (_) => FlightBloc(widget.flightRepository)),
+        BlocProvider(create: (_) => VersionBloc(widget.versionRepositoryImpl)),
       ],
       child: Builder(
         builder: (context) {
           return BlocBuilder<LanguageBloc, LanguageState>(
             builder: (context, state) {
               return MaterialApp(
+                navigatorKey: navigatorKey,
                 debugShowCheckedModeBanner: false,
                 localizationsDelegates: context.localizationDelegates,
                 supportedLocales: context.supportedLocales,
                 locale: context.locale,
-
                 initialRoute: "/splash",
                 routes: {
                   "/splash": (context) => const SplashPage(),

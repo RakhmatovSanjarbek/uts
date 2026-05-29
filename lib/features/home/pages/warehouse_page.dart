@@ -57,7 +57,7 @@ class WarehousePage extends StatelessWidget {
           children: [
             Row(
               children: [
-                _buildImage(model.image),
+                _buildImage(context, model.image),
                 const SizedBox(width: 12.0),
                 Expanded(
                   child: Column(
@@ -194,20 +194,34 @@ class WarehousePage extends StatelessWidget {
     );
   }
 
-  Widget _buildImage(String? imageUrl) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20.0),
-      child: Image.network(
-        "${Constants.baseUrl}/$imageUrl",
-        width: 120,
-        height: 120,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          width: 55,
-          height: 55,
-          color: AppColors.screenColor,
-          child: Icon(Icons.inventory_2_outlined, color: AppColors.grayColor),
+// Metod:
+  Widget _buildImage(BuildContext context, String? imageUrl) {
+    final url = "${Constants.baseUrl}/$imageUrl";
+    return GestureDetector(
+      onTap: () => _showFullScreenImage(context, url),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20.0),
+        child: Image.network(
+          url,
+          width: 120,
+          height: 120,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            width: 55,
+            height: 55,
+            color: AppColors.screenColor,
+            child: Icon(Icons.inventory_2_outlined, color: AppColors.grayColor),
+          ),
         ),
+      ),
+    );
+  }
+
+  void _showFullScreenImage(BuildContext context, String url) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _FullScreenImagePage(imageUrl: url),
       ),
     );
   }
@@ -253,5 +267,37 @@ class WarehousePage extends StatelessWidget {
       default:
         return {'color': Colors.grey};
     }
+  }
+}
+
+class _FullScreenImagePage extends StatelessWidget {
+  final String imageUrl;
+
+  const _FullScreenImagePage({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 4.0,
+          child: Image.network(
+            imageUrl,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const Icon(
+              Icons.broken_image_outlined,
+              color: Colors.white,
+              size: 64,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

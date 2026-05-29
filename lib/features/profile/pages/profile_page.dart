@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uts_cargo/core/extensions/padding_extensions.dart';
 import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
@@ -30,10 +31,19 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  String _appVersion = '';
   @override
   void initState() {
     super.initState();
     _refreshProfile();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() => _appVersion = info.version);
+    }
   }
 
   Future<void> _refreshProfile() async {
@@ -213,9 +223,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
 
                   const SizedBox(height: 16.0),
-
                   Text(
-                    "${AppStrings.appVersion} 1.0.3",
+                    "${AppStrings.appVersion} $_appVersion",
                     style: TextStyle(
                       color: AppColors.blackColor,
                       fontSize: 12.0,
