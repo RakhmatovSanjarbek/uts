@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
@@ -10,21 +9,25 @@ class WContactBottomSheet extends StatelessWidget {
   final InfoModel model;
   const WContactBottomSheet({super.key, required this.model});
 
-  Future<void> _launchURL(BuildContext context, String urlString) async {
-    final uri = Uri.parse(urlString);
+  Future<void> _launch(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (context.mounted) {
       context.showSnackBarMessage(AppStrings.linkNotOpened);
     }
   }
+
   Future<void> _openTelegram(BuildContext context, String username) async {
-    final box = context.findRenderObject() as RenderBox?;
-    await Share.share(
-      'https://t.me/$username',
-      sharePositionOrigin:
-      box != null ? box.localToGlobal(Offset.zero) & box.size : null,
-    );
+    final deep = Uri.parse('tg://resolve?domain=$username');
+    final web = Uri.parse('https://t.me/$username');
+    if (await canLaunchUrl(deep)) {
+      await launchUrl(deep, mode: LaunchMode.externalApplication);
+    } else if (await canLaunchUrl(web)) {
+      await launchUrl(web, mode: LaunchMode.externalApplication);
+    } else if (context.mounted) {
+      context.showSnackBarMessage(AppStrings.linkNotOpened);
+    }
   }
 
   @override
@@ -54,23 +57,26 @@ class WContactBottomSheet extends StatelessWidget {
           const SizedBox(height: 16.0),
           _buildContactRow(
             context: context,
-            icon: "assets/images/telegram_logo.png",
-            label: "@${model.contact.telegram}",
+            icon: 'assets/images/telegram_logo.png',
+            label: '@${model.contact.telegram}',
             onTap: () => _openTelegram(context, model.contact.telegram),
           ),
           const SizedBox(height: 16.0),
           _buildContactRow(
             context: context,
-            icon: "assets/images/instagram_logo.png",
-            label: "@${model.contact.instagram}",
-            onTap: () => _launchURL(context, "https://instagram.com/_u/${model.contact.instagram}"),
+            icon: 'assets/images/instagram_logo.png',
+            label: '@${model.contact.instagram}',
+            onTap: () => _launch(
+              context,
+              'https://instagram.com/_u/${model.contact.instagram}',
+            ),
           ),
           const SizedBox(height: 16.0),
           _buildContactRow(
             context: context,
-            icon: "assets/images/phone.png",
+            icon: 'assets/images/phone.png',
             label: model.contact.phone,
-            onTap: () => _launchURL(context, "tel:${model.contact.phone}"),
+            onTap: () => _launch(context, 'tel:${model.contact.phone}'),
           ),
           const SizedBox(height: 24.0),
           const Row(
@@ -110,7 +116,10 @@ class WContactBottomSheet extends StatelessWidget {
           const SizedBox(width: 16.0),
           Text(
             label,
-            style: const TextStyle(color: AppColors.blackColor, fontSize: 16.0),
+            style: const TextStyle(
+              color: AppColors.blackColor,
+              fontSize: 16.0,
+            ),
           ),
         ],
       ),

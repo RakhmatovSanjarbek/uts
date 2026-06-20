@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mime/mime.dart';
-import 'package:dio/dio.dart';
 import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
@@ -92,7 +90,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
     _refreshTimer = null;
   }
 
-  void _scrollToBottom({bool force = false}) {
+  void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
       _scrollController.animateTo(
@@ -103,9 +101,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
     });
   }
 
-  void _dismissKeyboard() {
-    _focusNode.unfocus();
-  }
+  void _dismissKeyboard() => _focusNode.unfocus();
 
   void _sendText() {
     final text = _controller.text.trim();
@@ -130,16 +126,8 @@ class _SupportChatPageState extends State<SupportChatPage> {
     );
     if (picked == null) return;
 
-    // DEBUG — konsolda ko'rish uchun
-    final file = File(picked.path);
-    final exists = await file.exists();
-    final size = exists ? await file.length() : 0;
-    print('📸 Rasm yo\'li: ${picked.path}');
-    print('📁 Fayl mavjud: $exists');
-    print('📦 Hajmi: $size bytes');
-
     context.read<ChatBloc>().add(
-      SendChatMessageEvent(image: file),
+      SendChatMessageEvent(image: File(picked.path)),
     );
     _scrollToBottom();
   }
@@ -193,7 +181,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
             IconButton(
               onPressed: () {
                 _loadChat();
-                _scrollToBottom(force: true);
+                _scrollToBottom();
               },
               icon: SvgPicture.asset(
                 AppSvg.icRefresh,

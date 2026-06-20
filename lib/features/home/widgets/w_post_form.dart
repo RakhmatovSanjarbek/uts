@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 
@@ -39,7 +39,7 @@ class PostForm extends StatelessWidget {
       children: [
         Text(
           AppStrings.deliveryAddress,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 16),
         _ModernDropdown(
@@ -137,17 +137,24 @@ class _TaxiInstructionCard extends StatelessWidget {
   Future<void> _copyToClipboard(BuildContext context) async {
     await Clipboard.setData(ClipboardData(text: copyText));
     if (context.mounted) {
-      context.showSnackBarMessage("Ma\'lumotlar nusxalandi!");
+      context.showSnackBarMessage("Ma'lumotlar nusxalandi!");
     }
   }
-  Future<void> _openTelegramApps(BuildContext context) async {
-    final box = context.findRenderObject() as RenderBox?;
-    await Share.share(
-      'https://t.me/uts_express\n\n$copyText',
-      sharePositionOrigin: box != null
-          ? box.localToGlobal(Offset.zero) & box.size
-          : null,
-    );
+
+  Future<void> _openTelegramChat(BuildContext context) async {
+    const username = 'uts_express';
+    final encodedText = Uri.encodeComponent(copyText);
+
+    final deep = Uri.parse('tg://resolve?domain=$username&text=$encodedText');
+    final web = Uri.parse('https://t.me/$username?text=$encodedText');
+
+    if (await canLaunchUrl(deep)) {
+      await launchUrl(deep, mode: LaunchMode.externalApplication);
+    } else if (await canLaunchUrl(web)) {
+      await launchUrl(web, mode: LaunchMode.externalApplication);
+    } else if (context.mounted) {
+      context.showSnackBarMessage("Telegram ilovasi topilmadi");
+    }
   }
 
   @override
@@ -166,7 +173,6 @@ class _TaxiInstructionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Row(
             children: [
               Container(
@@ -175,17 +181,13 @@ class _TaxiInstructionCard extends StatelessWidget {
                   color: Colors.green,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(
-                  Icons.local_taxi,
-                  color: Colors.white,
-                  size: 28,
-                ),
+                child: const Icon(Icons.local_taxi, color: Colors.white, size: 28),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
                   AppStrings.taxiDelivery,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.teal,
@@ -195,8 +197,6 @@ class _TaxiInstructionCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-
-          // User info
           _InfoCard(fullName: fullName, userID: userID),
           const SizedBox(height: 24),
           Container(
@@ -218,7 +218,7 @@ class _TaxiInstructionCard extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _copyToClipboard(context),
                     icon: const Icon(Icons.copy, size: 18),
-                    label: Text('Nusxalash'),
+                    label: const Text('Nusxalash'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
@@ -235,9 +235,9 @@ class _TaxiInstructionCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () => _openTelegramApps(context),
+              onPressed: () => _openTelegramChat(context),
               icon: const Icon(Icons.send, size: 20),
-              label: Text(AppStrings.send, style: TextStyle(fontSize: 16)),
+              label: Text(AppStrings.send, style: const TextStyle(fontSize: 16)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF229ED9),
                 foregroundColor: Colors.white,
@@ -249,13 +249,12 @@ class _TaxiInstructionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: onSent,
               icon: const Icon(Icons.check_circle, size: 20),
-              label:Text(AppStrings.sent, style: TextStyle(fontSize: 16)),
+              label: Text(AppStrings.sent, style: const TextStyle(fontSize: 16)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
@@ -292,7 +291,7 @@ class _InfoCard extends StatelessWidget {
         children: [
           Text(
             AppStrings.yourInformation,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: Colors.black87,
@@ -358,7 +357,10 @@ class _SelectedLocationCard extends StatelessWidget {
               children: [
                 Text(
                   AppStrings.locationReceived,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -379,6 +381,7 @@ class _SelectedLocationCard extends StatelessWidget {
     );
   }
 }
+
 class _ModernDropdown extends StatelessWidget {
   final String label;
   final String hint;
@@ -438,10 +441,10 @@ class _ModernDropdown extends StatelessWidget {
         items: items
             .map(
               (e) => DropdownMenuItem(
-                value: e,
-                child: Text(e, style: const TextStyle(fontSize: 14)),
-              ),
-            )
+            value: e,
+            child: Text(e, style: const TextStyle(fontSize: 14)),
+          ),
+        )
             .toList(),
         onChanged: onChanged,
         isExpanded: true,

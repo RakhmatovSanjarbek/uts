@@ -78,12 +78,8 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _showFeatureUnavailableMessage(
-    BuildContext context,
-    AuthState authState,
-  ) {
-    String message = "";
-
+  void _showFeatureUnavailableMessage(BuildContext context, AuthState authState) {
+    String message = '';
     if (authState is UnauthenticatedState) {
       message = AppStrings.registerToUse;
     } else if (authState is PendingState) {
@@ -100,28 +96,28 @@ class _HomePageState extends State<HomePage> {
       duration: const Duration(seconds: 3),
       action: (authState is UnauthenticatedState || authState is RejectedState)
           ? SnackBarAction(
-              label: authState is UnauthenticatedState
-                  ? AppStrings.registration
-                  : AppStrings.reRegister,
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                if (authState is UnauthenticatedState) {
-                  Navigator.pushNamed(context, "/login");
-                } else if (authState is RejectedState) {
-                  final user = (authState).user;
-                  final phone = user.phone;
-                  Navigator.pushNamed(context, "/register", arguments: phone);
-                }
-              },
-            )
+        label: authState is UnauthenticatedState
+            ? AppStrings.registration
+            : AppStrings.reRegister,
+        onPressed: () {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          if (authState is UnauthenticatedState) {
+            Navigator.pushNamed(context, '/login');
+          } else if (authState is RejectedState) {
+            Navigator.pushNamed(
+              context,
+              '/register',
+              arguments: authState.user.phone,
+            );
+          }
+        },
+      )
           : null,
     );
 
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
     Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      }
+      if (mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
     });
   }
 
@@ -142,8 +138,13 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   WHomeToolbar(
                     onLocationPressed: () {
-                      MapService.openSystemMap(lat: 41.334485, lng: 69.214603);
+                      final pickup = _cachedInfo?.pickup;
+                      MapService.openSystemMap(
+                        lat: pickup?.lat ?? 41.334485,
+                        lng: pickup?.lng ?? 69.214603,
+                      );
                     },
+                    pickupName: _cachedInfo?.pickup.name,
                   ),
                   Expanded(
                     child: _buildMainContent(
@@ -190,11 +191,11 @@ class _HomePageState extends State<HomePage> {
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.red, size: 20),
-              SizedBox(width: 8),
+              const Icon(Icons.info_outline, color: Colors.red, size: 20),
+              const SizedBox(width: 8),
               Text(
                 AppStrings.accountRejected,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.red,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -207,9 +208,9 @@ class _HomePageState extends State<HomePage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                 Text(
-                  "${AppStrings.reason}: ",
-                  style: TextStyle(
+                Text(
+                  '${AppStrings.reason}: ',
+                  style: const TextStyle(
                     color: Colors.grey,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -230,8 +231,8 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "${AppStrings.comment}: ",
-                  style: TextStyle(
+                  '${AppStrings.comment}: ',
+                  style: const TextStyle(
                     color: Colors.grey,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -250,13 +251,11 @@ class _HomePageState extends State<HomePage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () async {
-                Navigator.pushNamed(
-                  context,
-                  "/register",
-                  arguments: user.phone,
-                );
-              },
+              onPressed: () => Navigator.pushNamed(
+                context,
+                '/register',
+                arguments: user.phone,
+              ),
               icon: const Icon(Icons.refresh, size: 18),
               label: Text(AppStrings.reRegister),
               style: ElevatedButton.styleFrom(
@@ -291,16 +290,16 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Row(
         children: [
-          Icon(Icons.person_add, color: AppColors.mainColor),
+          const Icon(Icons.person_add, color: AppColors.mainColor),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               AppStrings.registerForFullAccess,
-              style: TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 14),
             ),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pushNamed(context, "/login"),
+            onPressed: () => Navigator.pushNamed(context, '/login'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.mainColor,
               foregroundColor: Colors.white,
@@ -316,12 +315,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMainContent(
-    AuthState authState,
-    bool isAuthenticated,
-    bool isPendingOrRejected,
-    bool isUnauthenticated,
-    bool isRejected,
-  ) {
+      AuthState authState,
+      bool isAuthenticated,
+      bool isPendingOrRejected,
+      bool isUnauthenticated,
+      bool isRejected,
+      ) {
     return MultiBlocListener(
       listeners: [
         BlocListener<InfoBloc, InfoState>(
@@ -337,7 +336,7 @@ class _HomePageState extends State<HomePage> {
               setState(() {
                 _phoneNumber = state.model.phone;
                 _userId = state.model.userId;
-                _fullName = "${state.model.firstName} ${state.model.lastName}";
+                _fullName = '${state.model.firstName} ${state.model.lastName}';
               });
             }
           },
@@ -357,11 +356,9 @@ class _HomePageState extends State<HomePage> {
               _isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-
-          final List<ArrivedGroupResponse> data = _lastWarehouseData;
           return _buildMainContentBody(
             context,
-            data,
+            _lastWarehouseData,
             authState,
             isAuthenticated,
             isPendingOrRejected,
@@ -374,18 +371,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMainContentBody(
-    BuildContext context,
-    List<ArrivedGroupResponse> groups,
-    AuthState authState,
-    bool isAuthenticated,
-    bool isPendingOrRejected,
-    bool isUnauthenticated,
-    bool isRejected,
-  ) {
-    final double screenHeight = MediaQuery.of(context).size.height;
-    final bottomPadding = isRejected
-        ? 180.0
-        : (isUnauthenticated ? 100.0 : 0.0);
+      BuildContext context,
+      List<ArrivedGroupResponse> groups,
+      AuthState authState,
+      bool isAuthenticated,
+      bool isPendingOrRejected,
+      bool isUnauthenticated,
+      bool isRejected,
+      ) {
+    final bottomPadding = isRejected ? 180.0 : (isUnauthenticated ? 100.0 : 0.0);
 
     return RefreshIndicator(
       displacement: 150,
@@ -393,17 +387,19 @@ class _HomePageState extends State<HomePage> {
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: screenHeight - bottomPadding),
+          constraints: BoxConstraints(
+            minHeight: MediaQuery.of(context).size.height - bottomPadding,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
               WQuickAccess(
                 onProhibitedPressed: () =>
-                    Navigator.pushNamed(context, "/prohibited"),
+                    Navigator.pushNamed(context, '/prohibited'),
                 onCalculatorPressed: () {
                   if (isAuthenticated) {
-                    Navigator.pushNamed(context, "/calculator");
+                    Navigator.pushNamed(context, '/calculator');
                   } else {
                     _showFeatureUnavailableMessage(context, authState);
                   }
@@ -442,7 +438,7 @@ class _HomePageState extends State<HomePage> {
                     },
                     child: Text(
                       AppStrings.all,
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -451,16 +447,16 @@ class _HomePageState extends State<HomePage> {
               Builder(
                 builder: (context) {
                   final activeOrders = groups
-                      .where((item) => item.paymentStatus != "Topshirildi")
+                      .where((item) => item.paymentStatus != 'Topshirildi')
                       .toList();
 
                   if (activeOrders.isEmpty) {
                     return Center(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
+                        padding: const EdgeInsets.symmetric(vertical: 20),
                         child: Text(
                           AppStrings.noOrdersYet,
-                          style: TextStyle(color: Colors.grey),
+                          style: const TextStyle(color: Colors.grey),
                         ),
                       ),
                     );
@@ -484,9 +480,9 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                           ).then((_) {
-                            context.read<WarehouseBloc>().add(
-                              GetArrivedGroupsEvent(),
-                            );
+                            context
+                                .read<WarehouseBloc>()
+                                .add(GetArrivedGroupsEvent());
                           });
                         },
                       );
@@ -496,7 +492,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 16),
               WBasicManagement(
-                onVideoPressed: () => Navigator.pushNamed(context, "/video"),
+                onVideoPressed: () => Navigator.pushNamed(context, '/video'),
                 onWarehousePressed: () {
                   if (isAuthenticated) {
                     _showWarehouseBottomSheet(context);
@@ -504,13 +500,15 @@ class _HomePageState extends State<HomePage> {
                     _showFeatureUnavailableMessage(context, authState);
                   }
                 },
-                onAboutPressed: () => Navigator.pushNamed(context, "/about"),
+                onAboutPressed: () => Navigator.pushNamed(context, '/about'),
                 onPricePressed: () => _showPriceBottomSheet(context),
                 onContactPressed: () => _showContactBottomSheet(context),
                 onUnassignedPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const UnassignedCargoPage()),
+                    MaterialPageRoute(
+                      builder: (_) => const UnassignedCargoPage(),
+                    ),
                   );
                 },
               ),
@@ -538,7 +536,7 @@ class _HomePageState extends State<HomePage> {
       context.showSnackBarMessage(AppStrings.loadingData);
       return;
     }
-    final cleanId = _userId!.replaceFirst("UTS-", "");
+    final cleanId = _userId!.replaceFirst('UTS-', '');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

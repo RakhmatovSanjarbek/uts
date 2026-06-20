@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
@@ -12,14 +11,11 @@ part 'chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatRepository repository;
-  Timer? _refreshTimer;
   ChatResponse? _lastResponse;
 
   ChatBloc(this.repository) : super(ChatInitial()) {
     on<GetChatsEvent>(_onGetChats);
     on<SendChatMessageEvent>(_onSendMessage);
-    on<StartAutoRefreshEvent>(_onStartAutoRefresh);
-    on<StopAutoRefreshEvent>(_onStopAutoRefresh);
   }
 
   Future<void> _onGetChats(
@@ -27,7 +23,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       Emitter<ChatState> emit,
       ) async {
     if (!event.isAutoRefresh && state is! ChatSuccess) {
-      emit(ChatLoading(isAutoRefresh: false));
+      emit(ChatLoading());
     }
     try {
       final res = await repository.getChats();
@@ -35,7 +31,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(ChatSuccess(res));
     } catch (e) {
       if (!event.isAutoRefresh) {
-        emit(ChatFailure(_mapErrorToMessage(e)));
+        emit(ChatFailure(_mapError(e)));
       }
     }
   }
@@ -44,76 +40,51 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       SendChatMessageEvent event,
       Emitter<ChatState> emit,
       ) async {
-    print('📤 SendMessage boshlandi. message: ${event.message}, image: ${event.image?.path}');
-    print('📊 Hozirgi state: $state');
-    print('📊 _lastResponse: $_lastResponse');
-
     final base = state is ChatSuccess
         ? (state as ChatSuccess).response
         : _lastResponse;
 
-    print('📊 base: $base');
-
     if (base == null) {
-      print('⚠️ base null — avval getChats chaqiriladi');
       await _onGetChats(GetChatsEvent(), emit);
       add(SendChatMessageEvent(message: event.message, image: event.image));
       return;
     }
 
+    final optimisticMsg = ChatModel(
+      message: event.message,
+      image: event.image?.path,
+      isFromAdmin: false,
+      timestampMs: DateTime.now().millisecondsSinceEpoch,
+      senderType: 'Client',
+    );
+    emit(ChatSuccess(base.copyWith(chats: [...base.chats, optimisticMsg])));
+
     try {
-      print('🚀 repository.sendMessage chaqirilmoqda...');
       await repository.sendMessage(
         message: event.message,
         image: event.image,
       );
-      print('✅ sendMessage muvaffaqiyatli');
       add(GetChatsEvent(isAutoRefresh: true));
     } catch (e) {
-      print('❌ sendMessage xatosi: $e');
       emit(ChatSuccess(base));
-      emit(ChatFailure(_mapErrorToMessage(e)));
+      emit(ChatFailure(_mapError(e)));
     }
   }
 
-  void _onStartAutoRefresh(
-      StartAutoRefreshEvent event,
-      Emitter<ChatState> emit,
-      ) {
-    _refreshTimer?.cancel();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (!isClosed) add(GetChatsEvent(isAutoRefresh: true));
-    });
-  }
-
-  void _onStopAutoRefresh(
-      StopAutoRefreshEvent event,
-      Emitter<ChatState> emit,
-      ) {
-    _refreshTimer?.cancel();
-    _refreshTimer = null;
-  }
-
-  String _mapErrorToMessage(dynamic e) {
+  String _mapError(dynamic e) {
     if (e is DioException) {
       final data = e.response?.data;
       if (data is Map) {
         return data['message']?.toString() ??
             data['error']?.toString() ??
-            "Xatolik yuz berdi";
+            'Xatolik yuz berdi';
       }
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.connectionError) {
         return "Internet bilan aloqa yo'q";
       }
-      return "Tarmoq xatoligi yuz berdi";
+      return 'Tarmoq xatoligi yuz berdi';
     }
     return e.toString();
-  }
-
-  @override
-  Future<void> close() {
-    _refreshTimer?.cancel();
-    return super.close();
   }
 }

@@ -10,8 +10,13 @@ import '../pages/notifications_page.dart';
 
 class WHomeToolbar extends StatelessWidget {
   final VoidCallback onLocationPressed;
+  final String? pickupName;
 
-  const WHomeToolbar({super.key, required this.onLocationPressed});
+  const WHomeToolbar({
+    super.key,
+    required this.onLocationPressed,
+    this.pickupName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +24,7 @@ class WHomeToolbar extends StatelessWidget {
       builder: (context, authState) {
         IconData statusIcon = Icons.check_circle;
         Color statusColor = Colors.green;
-        String statusDisplay = "";
+        String statusDisplay = '';
 
         if (authState is AuthenticatedState) {
           statusIcon = Icons.check_circle;
@@ -38,9 +43,9 @@ class WHomeToolbar extends StatelessWidget {
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.only(top: 48.0),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.mainColor,
-            borderRadius: const BorderRadius.only(
+            borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(24.0),
               bottomRight: Radius.circular(24.0),
             ),
@@ -49,7 +54,10 @@ class WHomeToolbar extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.only(
-                  left: 16.0, right: 16.0, top: 16.0, bottom: 12.0,
+                  left: 16.0,
+                  right: 16.0,
+                  top: 16.0,
+                  bottom: 12.0,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -62,7 +70,8 @@ class WHomeToolbar extends StatelessWidget {
                           GestureDetector(
                             onTap: onLocationPressed,
                             child: Container(
-                              width: 48.0, height: 48.0,
+                              width: 48.0,
+                              height: 48.0,
                               padding: const EdgeInsets.all(6.0),
                               decoration: BoxDecoration(
                                 color: AppColors.whiteColor,
@@ -70,14 +79,16 @@ class WHomeToolbar extends StatelessWidget {
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.15),
-                                    blurRadius: 8, offset: const Offset(0, 4),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
                               child: SvgPicture.asset(
                                 AppSvg.icLocation,
                                 colorFilter: const ColorFilter.mode(
-                                  AppColors.mainColor, BlendMode.srcIn,
+                                  AppColors.mainColor,
+                                  BlendMode.srcIn,
                                 ),
                               ),
                             ),
@@ -89,13 +100,19 @@ class WHomeToolbar extends StatelessWidget {
                             children: [
                               Text(
                                 AppStrings.pickupAddress,
-                                style: const TextStyle(color: AppColors.grayColor, fontSize: 12.0),
+                                style: const TextStyle(
+                                  color: AppColors.grayColor,
+                                  fontSize: 12.0,
+                                ),
                               ),
                               Text(
-                                AppStrings.beruniyStreet,
-                                style: TextStyle(
+                                pickupName?.isNotEmpty == true
+                                    ? pickupName!
+                                    : AppStrings.beruniyStreet,
+                                style: const TextStyle(
                                   color: AppColors.whiteColor,
-                                  fontSize: 16.0, fontWeight: FontWeight.bold,
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -103,7 +120,10 @@ class WHomeToolbar extends StatelessWidget {
                                   authState is PendingState ||
                                   authState is RejectedState)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: statusColor.withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(16),
@@ -111,13 +131,15 @@ class WHomeToolbar extends StatelessWidget {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(statusIcon, color: Colors.white, size: 16),
+                                      Icon(statusIcon,
+                                          color: Colors.white, size: 16),
                                       const SizedBox(width: 6),
                                       Text(
                                         statusDisplay,
                                         style: const TextStyle(
                                           color: Colors.white,
-                                          fontWeight: FontWeight.w500, fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 12,
                                         ),
                                       ),
                                     ],
@@ -139,14 +161,17 @@ class WHomeToolbar extends StatelessWidget {
                             ),
                           ),
                         ).then((_) {
-                          context.read<NotificationBloc>().add(GetUnreadCountEvent());
+                          context
+                              .read<NotificationBloc>()
+                              .add(GetUnreadCountEvent());
                         });
                       },
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
                           Container(
-                            width: 48.0, height: 48.0,
+                            width: 48.0,
+                            height: 48.0,
                             padding: const EdgeInsets.all(6.0),
                             decoration: BoxDecoration(
                               color: AppColors.whiteColor,
@@ -154,23 +179,31 @@ class WHomeToolbar extends StatelessWidget {
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.15),
-                                  blurRadius: 8, offset: const Offset(0, 4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
                             child: SvgPicture.asset(
                               AppSvg.icNotifications,
                               colorFilter: const ColorFilter.mode(
-                                AppColors.mainColor, BlendMode.srcIn,
+                                AppColors.mainColor,
+                                BlendMode.srcIn,
                               ),
                             ),
                           ),
                           BlocBuilder<NotificationBloc, NotificationState>(
                             builder: (context, state) {
                               int unreadCount = 0;
-                              if (state is NotificationSuccess) unreadCount = state.unreadCount;
-                              if (state is NotificationLoadingMore) unreadCount = state.unreadCount;
-                              if (state is UnreadCountState) unreadCount = state.count;
+                              if (state is NotificationSuccess) {
+                                unreadCount = state.unreadCount;
+                              }
+                              if (state is NotificationLoadingMore) {
+                                unreadCount = state.unreadCount;
+                              }
+                              if (state is UnreadCountState) {
+                                unreadCount = state.count;
+                              }
 
                               if (unreadCount == 0) return const SizedBox.shrink();
 
@@ -184,10 +217,13 @@ class WHomeToolbar extends StatelessWidget {
                                     shape: BoxShape.circle,
                                   ),
                                   constraints: const BoxConstraints(
-                                    minWidth: 18, minHeight: 18,
+                                    minWidth: 18,
+                                    minHeight: 18,
                                   ),
                                   child: Text(
-                                    unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                    unreadCount > 99
+                                        ? '99+'
+                                        : unreadCount.toString(),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 10,

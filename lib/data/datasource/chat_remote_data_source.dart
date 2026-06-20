@@ -1,11 +1,8 @@
 import 'dart:io';
-
 import 'package:dio/dio.dart';
-import 'package:mime/mime.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uts_cargo/core/constants/constants.dart';
 import 'package:uts_cargo/core/network/api_client.dart';
-
 import '../../core/utils/image_utils.dart';
 import '../models/chat_model/chat_response.dart';
 

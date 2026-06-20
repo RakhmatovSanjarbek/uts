@@ -107,7 +107,6 @@ class _WBottomSheetState extends State<WBottomSheet> {
       listener: (context, state) {
         if (state is CalculatorCreateSuccess) {
           Navigator.pop(context);
-          context.read<CalculatorBloc>().add(GetCalculationsEvent());
         } else if (state is CalculatorError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
@@ -168,7 +167,7 @@ class _WBottomSheetState extends State<WBottomSheet> {
                     ),
                     _buildTextField(
                       controller: weightController,
-                      label: "${AppStrings.weight} (${AppStrings.kg})",
+                      label: '${AppStrings.weight} (${AppStrings.kg})',
                       keyboardType: TextInputType.number,
                     ),
                     const SizedBox(height: 16.0),
@@ -213,12 +212,13 @@ class _WBottomSheetState extends State<WBottomSheet> {
             const SizedBox(height: 16.0),
             BlocBuilder<CalculatorBloc, CalculatorState>(
               builder: (context, state) {
+                final isLoading = state is CalculatorUploading;
                 return WLoadingButton(
                   title: AppStrings.submit,
-                  isLoading: state is CalculatorLoading,
+                  isLoading: isLoading,
                   isOnPressed: _isFormValid,
                   onPressed: () {
-                    if (!_isFormValid || state is CalculatorLoading) return;
+                    if (!_isFormValid || isLoading) return;
                     context.read<CalculatorBloc>().add(
                       CreateCalculationEvent(
                         CalculatorRequest(

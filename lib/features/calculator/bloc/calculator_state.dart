@@ -9,6 +9,8 @@ class CalculatorInitial extends CalculatorState {}
 
 class CalculatorLoading extends CalculatorState {}
 
+class CalculatorUploading extends CalculatorState {}
+
 class CalculatorLoaded extends CalculatorState {
   final List<CalculatorResponse> calculations;
   CalculatorLoaded(this.calculations);

@@ -5,7 +5,6 @@ import '../../../data/models/calculator_model/calculator_response.dart';
 import '../../../domain/repositories/calculator_repository.dart';
 
 part 'calculator_event.dart';
-
 part 'calculator_state.dart';
 
 class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
@@ -21,12 +20,15 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
         emit(CalculatorError(e.toString()));
       }
     });
+
     on<CreateCalculationEvent>((event, emit) async {
-      emit(CalculatorLoading());
+      emit(CalculatorUploading());
       try {
         final result = await repository.createCalculation(event.request);
         emit(CalculatorCreateSuccess(result));
-        add(GetCalculationsEvent());
+        emit(CalculatorLoading());
+        final list = await repository.getCalculations();
+        emit(CalculatorLoaded(list));
       } catch (e) {
         emit(CalculatorError(e.toString()));
       }
