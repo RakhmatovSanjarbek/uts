@@ -44,36 +44,33 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       SendChatMessageEvent event,
       Emitter<ChatState> emit,
       ) async {
-    // ChatSuccess bo'lmasa ham _lastResponse orqali ishlaydi
+    print('📤 SendMessage boshlandi. message: ${event.message}, image: ${event.image?.path}');
+    print('📊 Hozirgi state: $state');
+    print('📊 _lastResponse: $_lastResponse');
+
     final base = state is ChatSuccess
         ? (state as ChatSuccess).response
         : _lastResponse;
 
+    print('📊 base: $base');
+
     if (base == null) {
-      // Hech qanday ma'lumot yo'q — avval yuklab olamiz
+      print('⚠️ base null — avval getChats chaqiriladi');
       await _onGetChats(GetChatsEvent(), emit);
       add(SendChatMessageEvent(message: event.message, image: event.image));
       return;
     }
 
-    // Optimistik xabar qo'shamiz
-    final optimisticMsg = ChatModel(
-      message: event.message,
-      image: event.image?.path,
-      isFromAdmin: false,
-      timestampMs: DateTime.now().millisecondsSinceEpoch,
-      senderType: 'Client',
-    );
-    emit(ChatSuccess(base.copyWith(chats: [...base.chats, optimisticMsg])));
-
     try {
+      print('🚀 repository.sendMessage chaqirilmoqda...');
       await repository.sendMessage(
         message: event.message,
         image: event.image,
       );
+      print('✅ sendMessage muvaffaqiyatli');
       add(GetChatsEvent(isAutoRefresh: true));
     } catch (e) {
-      // Optimistik xabarni olib tashlab xatoni ko'rsatamiz
+      print('❌ sendMessage xatosi: $e');
       emit(ChatSuccess(base));
       emit(ChatFailure(_mapErrorToMessage(e)));
     }

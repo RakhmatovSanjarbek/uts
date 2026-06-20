@@ -61,7 +61,9 @@ class _WBottomSheetState extends State<WBottomSheet> {
 
     final picked = await ImagePicker().pickImage(
       source: source,
-      imageQuality: 90,
+      imageQuality: 70,
+      maxWidth: 1920,
+      maxHeight: 1920,
       preferredCameraDevice: CameraDevice.rear,
     );
 

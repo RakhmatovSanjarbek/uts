@@ -71,16 +71,15 @@ class ApiClient {
   }
 
   dynamic _handleResponse(Response response) {
-    // 204 kelganda data har doim null bo'ladi, shuning uchun darrov qaytaramiz
+    print('🌐 Status: ${response.statusCode}');
+    print('🌐 Data: ${response.data}');
+
     if (response.statusCode == 204) {
-      debugPrint("API: Pasport o'chirildi (204 No Content)");
       return null;
     }
-
     if (response.statusCode == 200 || response.statusCode == 201) {
       return response.data;
     }
-
     throw DioException(
       requestOptions: response.requestOptions,
       response: response,

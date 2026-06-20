@@ -123,13 +123,23 @@ class _SupportChatPageState extends State<SupportChatPage> {
 
     final XFile? picked = await _picker.pickImage(
       source: source,
-      imageQuality: 90,
+      imageQuality: 70,
+      maxWidth: 1920,
+      maxHeight: 1920,
       preferredCameraDevice: CameraDevice.rear,
     );
     if (picked == null) return;
 
+    // DEBUG — konsolda ko'rish uchun
+    final file = File(picked.path);
+    final exists = await file.exists();
+    final size = exists ? await file.length() : 0;
+    print('📸 Rasm yo\'li: ${picked.path}');
+    print('📁 Fayl mavjud: $exists');
+    print('📦 Hajmi: $size bytes');
+
     context.read<ChatBloc>().add(
-      SendChatMessageEvent(image: File(picked.path)),
+      SendChatMessageEvent(image: file),
     );
     _scrollToBottom();
   }

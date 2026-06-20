@@ -56,7 +56,9 @@ class _EnterFullInfoPageState extends State<EnterFullInfoPage> {
 
     final XFile? picked = await _picker.pickImage(
       source: source,
-      imageQuality: 90,
+      imageQuality: 70,
+      maxWidth: 1920,
+      maxHeight: 1920,
       preferredCameraDevice: CameraDevice.rear,
     );
 
