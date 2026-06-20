@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
+import 'package:dio/dio.dart';
 import 'package:uts_cargo/core/extensions/snack_extension.dart';
 import 'package:uts_cargo/core/string/app_string.dart';
 import 'package:uts_cargo/core/svg/app_svg.dart';
@@ -18,10 +20,7 @@ import '../widgets/w_nput_area.dart';
 class SupportChatPage extends StatefulWidget {
   final bool isActive;
 
-  const SupportChatPage({
-    super.key,
-    required this.isActive,
-  });
+  const SupportChatPage({super.key, required this.isActive});
 
   @override
   State<SupportChatPage> createState() => _SupportChatPageState();
@@ -30,55 +29,48 @@ class SupportChatPage extends StatefulWidget {
 class _SupportChatPageState extends State<SupportChatPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
   final ImagePicker _picker = ImagePicker();
+
   UserModel? _userModel;
   Timer? _refreshTimer;
   bool _isFirstLoad = true;
-  bool _shouldAutoScroll = true;
   int _lastMessageCount = 0;
 
   @override
   void initState() {
     super.initState();
+    _focusNode.addListener(_onFocusChange);
     if (widget.isActive) {
       _loadChat();
       _startAutoRefresh();
     }
-    _scrollController.addListener(_onScroll);
   }
 
   @override
   void didUpdateWidget(covariant SupportChatPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-
     if (widget.isActive && !oldWidget.isActive) {
       _loadChat();
       _startAutoRefresh();
-    }
-    else if (!widget.isActive && oldWidget.isActive) {
+    } else if (!widget.isActive && oldWidget.isActive) {
       _stopAutoRefresh();
     }
   }
 
   @override
   void dispose() {
-    _stopAutoRefresh();
-    _scrollController.removeListener(_onScroll);
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    _refreshTimer?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
-
-    final isNearBottom = _scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 100;
-
-    if (isNearBottom) {
-      _shouldAutoScroll = true;
-    } else {
-      _shouldAutoScroll = false;
+  void _onFocusChange() {
+    if (_focusNode.hasFocus) {
+      Future.delayed(const Duration(milliseconds: 350), _scrollToBottom);
     }
   }
 
@@ -88,7 +80,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
 
   void _startAutoRefresh() {
     _refreshTimer?.cancel();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (mounted && widget.isActive) {
         context.read<ChatBloc>().add(GetChatsEvent(isAutoRefresh: true));
       }
@@ -100,124 +92,151 @@ class _SupportChatPageState extends State<SupportChatPage> {
     _refreshTimer = null;
   }
 
-  void _scrollToBottom() {
+  void _scrollToBottom({bool force = false}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients && _shouldAutoScroll) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     });
   }
 
-  void _scrollToBottomForce() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+  void _dismissKeyboard() {
+    _focusNode.unfocus();
   }
 
   void _sendText() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+    _dismissKeyboard();
     context.read<ChatBloc>().add(SendChatMessageEvent(message: text));
     _controller.clear();
-    _shouldAutoScroll = true;
     _scrollToBottom();
   }
 
   Future<void> _sendImage() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 70,
+    _dismissKeyboard();
+    final source = await _showSourceDialog();
+    if (source == null) return;
+
+    final XFile? picked = await _picker.pickImage(
+      source: source,
+      imageQuality: 90,
+      preferredCameraDevice: CameraDevice.rear,
     );
-    if (image == null) return;
-    context.read<ChatBloc>().add(SendChatMessageEvent(image: File(image.path)));
-    _shouldAutoScroll = true;
+    if (picked == null) return;
+
+    context.read<ChatBloc>().add(
+      SendChatMessageEvent(image: File(picked.path)),
+    );
     _scrollToBottom();
+  }
+
+  Future<ImageSource?> _showSourceDialog() {
+    return showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Kamera'),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Galereya'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.screenColor,
-      appBar: AppBar(
-        title: Text(
-          AppStrings.help,
-          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.blackColor),
-        ),
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: Scaffold(
         backgroundColor: AppColors.screenColor,
-        elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: () {
-              context.read<ChatBloc>().add(GetChatsEvent());
-              _shouldAutoScroll = true;
-              _scrollToBottomForce();
-            },
-            icon: SvgPicture.asset(
-              AppSvg.icRefresh,
-              width: 24.0,
-              height: 24.0,
-              colorFilter: const ColorFilter.mode(
-                AppColors.mainColor,
-                BlendMode.srcIn,
-              ),
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          title: Text(
+            AppStrings.help,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.blackColor,
             ),
           ),
-        ],
-      ),
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, authState) {
-          final bool isAuthenticated = authState is AuthenticatedState;
-          final bool isPending = authState is PendingState;
-          final bool isRejected = authState is RejectedState;
-          final bool isUnauthenticated = authState is UnauthenticatedState;
+          backgroundColor: AppColors.screenColor,
+          elevation: 0,
+          actions: [
+            IconButton(
+              onPressed: () {
+                _loadChat();
+                _scrollToBottom(force: true);
+              },
+              icon: SvgPicture.asset(
+                AppSvg.icRefresh,
+                width: 24.0,
+                height: 24.0,
+                colorFilter: const ColorFilter.mode(
+                  AppColors.mainColor,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+          ],
+        ),
+        body: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, authState) {
+            if (authState is RejectedState) _userModel = authState.user;
 
-          if (isRejected) {
-            _userModel = authState.user;
-          }
+            if (authState is! AuthenticatedState) {
+              return _buildUnavailableScreen(
+                isPending: authState is PendingState,
+                isRejected: authState is RejectedState,
+                isUnauthenticated: authState is UnauthenticatedState,
+              );
+            }
 
-          if (!isAuthenticated) {
-            return _buildUnavailableScreen(isPending, isRejected, isUnauthenticated);
-          }
-
-          return _buildChatContent();
-        },
+            return _buildChatContent();
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildUnavailableScreen(bool isPending, bool isRejected, bool isUnauthenticated) {
-    String message = "";
-    String buttonText = "";
+  Widget _buildUnavailableScreen({
+    required bool isPending,
+    required bool isRejected,
+    required bool isUnauthenticated,
+  }) {
+    String message = '';
+    String buttonText = '';
     VoidCallback? onPressed;
 
     if (isUnauthenticated) {
       message = AppStrings.registerToUse;
       buttonText = AppStrings.registration;
-      onPressed = () => Navigator.pushNamed(context, "/login");
+      onPressed = () => Navigator.pushNamed(context, '/login');
     } else if (isPending) {
       message = AppStrings.accountChecking;
-      buttonText = "";
-      onPressed = null;
     } else if (isRejected) {
       message = AppStrings.accountRejectedReRegister;
       buttonText = AppStrings.reRegister;
       onPressed = () {
         if (_userModel != null && _userModel!.phone.isNotEmpty) {
-          Navigator.pushNamed(
-            context,
-            "/register",
-            arguments: _userModel!.phone,
-          );
+          Navigator.pushNamed(context, '/register', arguments: _userModel!.phone);
         }
       };
     }
@@ -241,10 +260,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppColors.grayColor,
-              ),
+              style: const TextStyle(fontSize: 16, color: AppColors.grayColor),
             ),
             if (buttonText.isNotEmpty && onPressed != null) ...[
               const SizedBox(height: 24),
@@ -274,15 +290,11 @@ class _SupportChatPageState extends State<SupportChatPage> {
           child: BlocConsumer<ChatBloc, ChatState>(
             listener: (context, state) {
               if (state is ChatSuccess) {
-                final currentCount = state.response.chats.length;
-                final hasNewMessage = currentCount > _lastMessageCount;
-                _lastMessageCount = currentCount;
-
-                if (_isFirstLoad) {
+                final count = state.response.chats.length;
+                final hasNew = count > _lastMessageCount;
+                _lastMessageCount = count;
+                if (_isFirstLoad || hasNew) {
                   _isFirstLoad = false;
-                  _shouldAutoScroll = true;
-                  _scrollToBottom();
-                } else if (hasNewMessage && _shouldAutoScroll) {
                   _scrollToBottom();
                 }
               } else if (state is ChatFailure) {
@@ -313,7 +325,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
                         const SizedBox(height: 16),
                         Text(
                           AppStrings.noMessages,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.grayColor,
                             fontSize: 16,
                           ),
@@ -322,50 +334,52 @@ class _SupportChatPageState extends State<SupportChatPage> {
                     ),
                   );
                 }
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  reverse: false,
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = messages[index];
-                    final isUser = !msg.isFromAdmin;
-                    bool showDate = false;
-                    if (index == 0) {
-                      showDate = true;
-                    } else {
-                      final olderMsg = messages[index - 1];
-                      if (!_isSameDay(
-                        msg.timestampMs,
-                        olderMsg.timestampMs,
-                      )) {
-                        showDate = true;
-                      }
+
+                return NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification is ScrollUpdateNotification) {
+                      final isAtBottom =
+                          _scrollController.position.pixels >=
+                              _scrollController.position.maxScrollExtent - 80;
+                      if (isAtBottom) _dismissKeyboard();
                     }
-                    return Column(
-                      children: [
-                        if (showDate)
-                          WDateDivider(timestamp: msg.timestampMs),
-                        Align(
-                          alignment: isUser
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: WMessageBubble(message: msg, isUser: isUser),
-                        ),
-                      ],
-                    );
+                    return false;
                   },
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = messages[index];
+                      final isUser = !msg.isFromAdmin;
+                      final showDate = index == 0 ||
+                          !_isSameDay(
+                            msg.timestampMs,
+                            messages[index - 1].timestampMs,
+                          );
+                      return Column(
+                        children: [
+                          if (showDate) WDateDivider(timestamp: msg.timestampMs),
+                          Align(
+                            alignment: isUser
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: WMessageBubble(message: msg, isUser: isUser),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 );
               }
+
               return const SizedBox.shrink();
             },
           ),
         ),
         WInputArea(
           controller: _controller,
+          focusNode: _focusNode,
           onSend: _sendText,
           onPickImage: _sendImage,
         ),

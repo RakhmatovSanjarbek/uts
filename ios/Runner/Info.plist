@@ -24,6 +24,14 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Pasport va yuk rasmlarini olish uchun kameraga ruxsat kerak</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Pasport va yuk rasmlarini yuklash uchun galereyaga ruxsat kerak</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Rasmlarni saqlash uchun galereyaga ruxsat kerak</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Video yozish uchun mikrofonga ruxsat kerak</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>tg</string>

@@ -25,7 +25,6 @@ class _WBottomSheetState extends State<WBottomSheet> {
   final heightController = TextEditingController();
   final commentController = TextEditingController();
   File? _selectedImage;
-
   bool _isFormValid = false;
 
   @override
@@ -37,35 +36,6 @@ class _WBottomSheetState extends State<WBottomSheet> {
     heightController.addListener(_validateForm);
   }
 
-  void _validateForm() {
-    final isValid =
-        weightController.text.isNotEmpty &&
-        lengthController.text.isNotEmpty &&
-        widthController.text.isNotEmpty &&
-        heightController.text.isNotEmpty &&
-        _selectedImage != null;
-
-    if (isValid != _isFormValid) {
-      setState(() {
-        _isFormValid = isValid;
-      });
-    }
-  }
-
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
-      _validateForm();
-    }
-  }
-
   @override
   void dispose() {
     weightController.dispose();
@@ -74,6 +44,59 @@ class _WBottomSheetState extends State<WBottomSheet> {
     heightController.dispose();
     commentController.dispose();
     super.dispose();
+  }
+
+  void _validateForm() {
+    final valid = weightController.text.isNotEmpty &&
+        lengthController.text.isNotEmpty &&
+        widthController.text.isNotEmpty &&
+        heightController.text.isNotEmpty &&
+        _selectedImage != null;
+    if (valid != _isFormValid) setState(() => _isFormValid = valid);
+  }
+
+  Future<void> _pickImage() async {
+    final source = await _showSourceDialog();
+    if (source == null) return;
+
+    final picked = await ImagePicker().pickImage(
+      source: source,
+      imageQuality: 90,
+      preferredCameraDevice: CameraDevice.rear,
+    );
+
+    if (picked != null) {
+      setState(() => _selectedImage = File(picked.path));
+      _validateForm();
+    }
+  }
+
+  Future<ImageSource?> _showSourceDialog() {
+    return showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Kamera'),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Galereya'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -122,25 +145,22 @@ class _WBottomSheetState extends State<WBottomSheet> {
                         height: 120.0,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24.0),
-                          border: Border.all(
-                            color: AppColors.mainColor,
-                            width: 2.0,
-                          ),
+                          border: Border.all(color: AppColors.mainColor, width: 2.0),
                           image: _selectedImage != null
                               ? DecorationImage(
-                                  image: FileImage(_selectedImage!),
-                                  fit: BoxFit.cover,
-                                )
+                            image: FileImage(_selectedImage!),
+                            fit: BoxFit.cover,
+                          )
                               : null,
                         ),
                         child: _selectedImage == null
                             ? SvgPicture.asset(
-                                AppSvg.icAddImage,
-                                colorFilter: const ColorFilter.mode(
-                                  AppColors.mainColor,
-                                  BlendMode.srcIn,
-                                ),
-                              ).paddingAll(24.0)
+                          AppSvg.icAddImage,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.mainColor,
+                            BlendMode.srcIn,
+                          ),
+                        ).paddingAll(24.0)
                             : const SizedBox.shrink(),
                       ),
                     ),
@@ -165,9 +185,7 @@ class _WBottomSheetState extends State<WBottomSheet> {
                             controller: widthController,
                             label: AppStrings.width,
                             keyboardType: TextInputType.number,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 2.0,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 2.0),
                           ),
                         ),
                         Expanded(
@@ -193,25 +211,24 @@ class _WBottomSheetState extends State<WBottomSheet> {
             const SizedBox(height: 16.0),
             BlocBuilder<CalculatorBloc, CalculatorState>(
               builder: (context, state) {
-                final isLoading = state is CalculatorLoading;
                 return WLoadingButton(
                   title: AppStrings.submit,
-                  isLoading: isLoading,
+                  isLoading: state is CalculatorLoading,
                   isOnPressed: _isFormValid,
                   onPressed: () {
-                    if (_isFormValid && !isLoading) {
-                      final request = CalculatorRequest(
-                        images: _selectedImage!,
-                        weight: weightController.text,
-                        length: lengthController.text,
-                        width: widthController.text,
-                        height: heightController.text,
-                        comment: commentController.text,
-                      );
-                      context.read<CalculatorBloc>().add(
-                        CreateCalculationEvent(request),
-                      );
-                    }
+                    if (!_isFormValid || state is CalculatorLoading) return;
+                    context.read<CalculatorBloc>().add(
+                      CreateCalculationEvent(
+                        CalculatorRequest(
+                          images: _selectedImage!,
+                          weight: weightController.text,
+                          length: lengthController.text,
+                          width: widthController.text,
+                          height: heightController.text,
+                          comment: commentController.text,
+                        ),
+                      ),
+                    );
                   },
                 );
               },

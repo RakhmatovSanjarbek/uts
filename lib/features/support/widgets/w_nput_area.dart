@@ -7,12 +7,14 @@ import '../../../core/theme/app_colors.dart';
 
 class WInputArea extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode focusNode;
   final VoidCallback onSend;
   final VoidCallback onPickImage;
 
   const WInputArea({
     super.key,
     required this.controller,
+    required this.focusNode,
     required this.onSend,
     required this.onPickImage,
   });
@@ -26,7 +28,7 @@ class WInputArea extends StatelessWidget {
         12,
         MediaQuery.of(context).padding.bottom + 8,
       ),
-      decoration: BoxDecoration(color: AppColors.whiteColor),
+      decoration: const BoxDecoration(color: AppColors.whiteColor),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -34,7 +36,7 @@ class WInputArea extends StatelessWidget {
             onPressed: onPickImage,
             icon: SvgPicture.asset(
               AppSvg.icFile,
-              colorFilter: ColorFilter.mode(
+              colorFilter: const ColorFilter.mode(
                 AppColors.mainColor,
                 BlendMode.srcIn,
               ),
@@ -51,8 +53,10 @@ class WInputArea extends StatelessWidget {
               ),
               child: TextField(
                 controller: controller,
+                focusNode: focusNode,
                 maxLines: 5,
                 minLines: 1,
+                textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   hintText: AppStrings.writeMessage,
                   border: InputBorder.none,
@@ -67,7 +71,7 @@ class WInputArea extends StatelessWidget {
               onPressed: onSend,
               icon: SvgPicture.asset(
                 AppSvg.icSend,
-                colorFilter: ColorFilter.mode(
+                colorFilter: const ColorFilter.mode(
                   AppColors.whiteColor,
                   BlendMode.srcIn,
                 ),

@@ -36,7 +36,7 @@ android {
         applicationId = "uts.cargo.uz"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 3
+        versionCode = 4
         versionName = flutter.versionName
 
         multiDexEnabled = true

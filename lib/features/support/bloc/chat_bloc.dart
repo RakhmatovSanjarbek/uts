@@ -1,4 +1,3 @@
-// lib/features/chat/bloc/chat_bloc.dart
 import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
@@ -14,6 +13,7 @@ part 'chat_state.dart';
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatRepository repository;
   Timer? _refreshTimer;
+  ChatResponse? _lastResponse;
 
   ChatBloc(this.repository) : super(ChatInitial()) {
     on<GetChatsEvent>(_onGetChats);
@@ -22,14 +22,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<StopAutoRefreshEvent>(_onStopAutoRefresh);
   }
 
-  Future<void> _onGetChats(GetChatsEvent event, Emitter<ChatState> emit) async {
-    // Agar auto-refresh bo'lmasa va state ChatSuccess bo'lsa, loading ko'rsat
+  Future<void> _onGetChats(
+      GetChatsEvent event,
+      Emitter<ChatState> emit,
+      ) async {
     if (!event.isAutoRefresh && state is! ChatSuccess) {
       emit(ChatLoading(isAutoRefresh: false));
     }
-
     try {
       final res = await repository.getChats();
+      _lastResponse = res;
       emit(ChatSuccess(res));
     } catch (e) {
       if (!event.isAutoRefresh) {
@@ -38,58 +40,74 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
-  Future<void> _onSendMessage(SendChatMessageEvent event, Emitter<ChatState> emit) async {
-    final currentState = state;
-    if (currentState is ChatSuccess) {
-      try {
-        await repository.sendMessage(
-          message: event.message,
-          image: event.image,
-        );
+  Future<void> _onSendMessage(
+      SendChatMessageEvent event,
+      Emitter<ChatState> emit,
+      ) async {
+    // ChatSuccess bo'lmasa ham _lastResponse orqali ishlaydi
+    final base = state is ChatSuccess
+        ? (state as ChatSuccess).response
+        : _lastResponse;
 
-        // Optimistik yangilash
-        final myNewMsg = ChatModel(
-          message: event.message,
-          image: event.image?.path,
-          isFromAdmin: false,
-          timestampMs: DateTime.now().millisecondsSinceEpoch,
-          senderType: 'Client',
-        );
-        final List<ChatModel> updatedList = [
-          ...currentState.response.chats,
-          myNewMsg,
-        ];
-        emit(ChatSuccess(currentState.response.copyWith(chats: updatedList)));
+    if (base == null) {
+      // Hech qanday ma'lumot yo'q — avval yuklab olamiz
+      await _onGetChats(GetChatsEvent(), emit);
+      add(SendChatMessageEvent(message: event.message, image: event.image));
+      return;
+    }
 
-        // Serverdan yangilangan ma'lumotlarni olish
-        add(GetChatsEvent(isAutoRefresh: true));
-      } catch (e) {
-        emit(ChatFailure(_mapErrorToMessage(e)));
-      }
+    // Optimistik xabar qo'shamiz
+    final optimisticMsg = ChatModel(
+      message: event.message,
+      image: event.image?.path,
+      isFromAdmin: false,
+      timestampMs: DateTime.now().millisecondsSinceEpoch,
+      senderType: 'Client',
+    );
+    emit(ChatSuccess(base.copyWith(chats: [...base.chats, optimisticMsg])));
+
+    try {
+      await repository.sendMessage(
+        message: event.message,
+        image: event.image,
+      );
+      add(GetChatsEvent(isAutoRefresh: true));
+    } catch (e) {
+      // Optimistik xabarni olib tashlab xatoni ko'rsatamiz
+      emit(ChatSuccess(base));
+      emit(ChatFailure(_mapErrorToMessage(e)));
     }
   }
 
-  void _onStartAutoRefresh(StartAutoRefreshEvent event, Emitter<ChatState> emit) {
+  void _onStartAutoRefresh(
+      StartAutoRefreshEvent event,
+      Emitter<ChatState> emit,
+      ) {
     _refreshTimer?.cancel();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (!isClosed) {
-        add(GetChatsEvent(isAutoRefresh: true));
-      }
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!isClosed) add(GetChatsEvent(isAutoRefresh: true));
     });
   }
 
-  void _onStopAutoRefresh(StopAutoRefreshEvent event, Emitter<ChatState> emit) {
+  void _onStopAutoRefresh(
+      StopAutoRefreshEvent event,
+      Emitter<ChatState> emit,
+      ) {
     _refreshTimer?.cancel();
     _refreshTimer = null;
   }
 
   String _mapErrorToMessage(dynamic e) {
     if (e is DioException) {
-      final dynamic data = e.response?.data;
+      final data = e.response?.data;
       if (data is Map) {
         return data['message']?.toString() ??
             data['error']?.toString() ??
             "Xatolik yuz berdi";
+      }
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.connectionError) {
+        return "Internet bilan aloqa yo'q";
       }
       return "Tarmoq xatoligi yuz berdi";
     }

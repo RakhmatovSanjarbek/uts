@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
+import '../../../core/utils/image_utils.dart';
+
 class CalculatorRequest {
   final File images;
   final String weight;
@@ -21,12 +23,12 @@ class CalculatorRequest {
 
   Future<FormData> toFormData() async {
     return FormData.fromMap({
-      "image": await MultipartFile.fromFile(images.path, filename: images.path.split('/').last),
+      "image": await toMultipart(images, prefix: 'calc'),
       "weight": weight,
       "length": length,
       "width": width,
       "height": height,
-      if (comment != null) "comment": comment,
+      if (comment != null && comment!.isNotEmpty) "comment": comment,
     });
   }
 }

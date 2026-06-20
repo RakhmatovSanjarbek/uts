@@ -1,10 +1,12 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:mime/mime.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uts_cargo/core/constants/constants.dart';
 import 'package:uts_cargo/core/network/api_client.dart';
 
+import '../../core/utils/image_utils.dart';
 import '../models/chat_model/chat_response.dart';
 
 class ChatRemoteDataSource {
@@ -19,30 +21,23 @@ class ChatRemoteDataSource {
 
   Future<ChatResponse> getChats() async {
     final token = await getToken();
-    final client = ApiClient(token: token);
-
-    final res = await client.get('/api/services/chat/');
+    final c = ApiClient(token: token);
+    final res = await c.get('/api/services/chat/');
     return ChatResponse.fromJson(res);
   }
 
-  Future<void> sendMessage({
-    String? message,
-    File? image,
-  }) async {
+  Future<void> sendMessage({String? message, File? image}) async {
     final token = await getToken();
-    final client = ApiClient(token: token);
+    final c = ApiClient(token: token);
 
-    final formData = FormData.fromMap({
-      if (message != null) "message": message,
-      if (image != null)
-        "image": await MultipartFile.fromFile(image.path),
-    });
+    final map = <String, dynamic>{};
+    if (message != null && message.isNotEmpty) map['message'] = message;
+    if (image != null) map['image'] = await toMultipart(image, prefix: 'chat');
 
-    await client.post(
+    await c.post(
       '/api/services/chat/',
-      body: formData,
+      body: FormData.fromMap(map),
       isMultipart: true,
     );
   }
-
 }
